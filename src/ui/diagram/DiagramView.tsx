@@ -27,6 +27,10 @@ export interface DiagramViewProps {
   /** Vertices drawn as empty sockets waiting for lines. */
   socketHints?: boolean;
   overlay?: ReactNode;
+  /** Playback: how much of each line has been travelled (0–1), and from which end. */
+  reveal?: ReadonlyMap<string, { p: number; fromStart: boolean }>;
+  /** Playback: vertices not reached yet. */
+  pendingNodes?: ReadonlySet<string>;
   ariaLabel?: string;
   onPointerDown?: (e: RPointerEvent<SVGSVGElement>) => void;
   onPointerMove?: (e: RPointerEvent<SVGSVGElement>) => void;
@@ -68,6 +72,8 @@ export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function 
     activeNode,
     socketHints,
     overlay,
+    reveal,
+    pendingNodes,
     ariaLabel,
     ...pointer
   },
@@ -92,7 +98,7 @@ export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function 
   return (
     <svg
       ref={ref}
-      className={`diagram ${success ? 'is-success' : ''} ${compact ? 'is-compact' : ''}`}
+      className={`diagram ${success ? 'is-success' : ''} ${compact ? 'is-compact' : ''} ${reveal ? 'is-playback' : ''}`}
       viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
       role="img"
       aria-label={ariaLabel ?? 'Diagrama de Feynman'}
@@ -125,6 +131,18 @@ export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function 
           const cls = edgeClass(diagram, e);
           const isPhoton = e.type === 'photon';
           const d = isPhoton ? wavyPath(a, b, e.bend) : straightOrCurvedPath(a, b, e.bend);
+          const r = reveal?.get(e.id);
+          if (reveal) {
+            const p = Math.max(0, Math.min(1, r?.p ?? 1));
+            const dash = r?.fromStart === false ? `0 ${1 - p} ${p} 1` : `${p} 2`;
+            return (
+              <g key={e.id} className={`edge ${cls} ${stateClass(e.id)}`} data-edge={e.id}>
+                <path className="edge-ghost" d={d} />
+                <path className="edge-line" d={d} pathLength={1} strokeDasharray={dash} />
+                {!isPhoton && <path className="edge-arrow" style={{ opacity: p > 0.55 ? 1 : 0 }} d={arrowHead(a, b, e.bend, compact ? 3 : 2.4)} />}
+              </g>
+            );
+          }
           return (
             <g
               key={e.id}
@@ -148,7 +166,13 @@ export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function 
           if (!a || !b) return null;
           const p = labelPoint(a, b, e.bend, e.type === 'photon' ? 5.2 : 4);
           return (
-            <text key={`l-${e.id}`} className={`edge-label ${edgeClass(diagram, e)} ${stateClass(e.id)}`} x={p.x} y={p.y + 1.3}>
+            <text
+              key={`l-${e.id}`}
+              className={`edge-label ${edgeClass(diagram, e)} ${stateClass(e.id)}`}
+              x={p.x}
+              y={p.y + 1.3}
+              style={reveal ? { opacity: (reveal.get(e.id)?.p ?? 1) >= 0.5 ? 1 : 0 } : undefined}
+            >
               {edgeLabel(diagram, e)}
             </text>
           );
@@ -159,7 +183,7 @@ export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function 
         <NodeGlyph
           key={n.id}
           n={n}
-          cls={stateClass(n.id)}
+          cls={`${stateClass(n.id)} ${pendingNodes?.has(n.id) ? 'is-pending' : ''}`}
           showTag={showTags}
           snap={snapNode === n.id}
           active={activeNode === n.id}
@@ -241,7 +265,7 @@ function NodeGlyph({
       </g>
     );
   }
-  const tagX = n.kind === 'in' ? n.x - 4.2 : n.x + 4.2;
+  const tagX = n.kind === 'in' ? n.x - 3 : n.x + 3;
   return (
     <g className={`node external ${n.kind} ${cls} ${snap ? 'is-snap' : ''} ${active ? 'is-active' : ''}`} data-node={n.id}>
       <circle className="ext-halo" cx={n.x} cy={n.y} r={3.6} />
@@ -252,7 +276,7 @@ function NodeGlyph({
         </text>
       )}
       {showTag && n.tag && (
-        <text className="ext-tag" x={tagX} y={n.y + 1.2}>
+        <text className="ext-tag" x={tagX} y={n.y + 1} textAnchor={n.kind === 'in' ? 'end' : 'start'}>
           {n.tag}
         </text>
       )}

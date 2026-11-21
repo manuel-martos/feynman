@@ -5,6 +5,7 @@ import type { BuildStep, ChoiceStep, Step, TapStep } from '../game/types';
 import { sfx } from './audio';
 import { DiagramEditor } from './diagram/DiagramEditor';
 import { DiagramView } from './diagram/DiagramView';
+import { DiagramPlayback } from './diagram/DiagramPlayback';
 
 export interface Feedback {
   tone: 'error' | 'info';
@@ -158,7 +159,7 @@ function ChoicePlayer({ step, solved, onMistake, onSolved, haptics }: StepPlayer
     <>
       {step.diagram && (
         <div className="diagram-card">
-          <DiagramView diagram={step.diagram} success={solved} />
+          {step.playback ? <DiagramPlayback diagram={step.diagram} /> : <DiagramView diagram={step.diagram} success={solved} />}
         </div>
       )}
       {step.diagrams && (
@@ -254,6 +255,7 @@ function BuildPlayer({ step, solved, onMistake, onSolved, haptics }: StepPlayerP
           success={solved}
           disabled={solved}
           onNotice={(msg) => setFb({ tone: 'info', title: 'Ojo', body: msg })}
+          allowParallel={!!step.validation.loops}
         />
       </div>
       <FeedbackBar fb={fb} />

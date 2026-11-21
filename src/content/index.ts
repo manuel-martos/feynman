@@ -8,3 +8,4 @@ export const locale = 'es';
 export const content: Content = CONTENT[locale];
 export const issueText = issueTextEs;
 export { practiceSession } from './es/practice';
+export { narrate, type Caption } from './es/narrate';

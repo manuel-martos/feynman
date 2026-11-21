@@ -5,6 +5,7 @@ import type { Diagram } from '../../engine';
 import type { Level } from '../../game/types';
 import { sfx } from '../audio';
 import { DiagramView } from '../diagram/DiagramView';
+import { DiagramPlayback } from '../diagram/DiagramPlayback';
 import { Explanation } from '../components/Explanation';
 import { MechanicBadge } from '../components/MechanicBadge';
 import { Stars } from '../components/Stars';
@@ -265,7 +266,7 @@ function LevelDone({
           ))}
         </div>
         <Stars value={result.stars} size={48} animate />
-        <h1>{level.id === 24 ? '¡Campaña completada!' : starsTitle(result.stars)}</h1>
+        <h1>{!nextLevel ? '¡Campaña completada!' : starsTitle(result.stars)}</h1>
         <p className="done-sub">
           {mistakes === 0 ? 'Sin errores' : `${mistakes} ${mistakes === 1 ? 'error' : 'errores'}`} · {hints === 0 ? 'sin pistas' : `${hints} ${hints === 1 ? 'pista' : 'pistas'}`}
           {result.xp > 0 && <span className="xp-chip">+{result.xp} XP</span>}
@@ -275,7 +276,7 @@ function LevelDone({
       <section className="card success-card">
         {heroDiagram && (
           <div className="done-diagram">
-            <DiagramView diagram={heroDiagram} success compact={false} showLabels />
+            <DiagramPlayback diagram={heroDiagram} autoPlay />
           </div>
         )}
         <p className="success-text">{level.success}</p>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { content } from '../../content';
 import { useGame } from '../../game/store';
 import type { Concept } from '../../game/types';
-import { DiagramView } from '../diagram/DiagramView';
+import { DiagramPlayback } from '../diagram/DiagramPlayback';
 import { sfx } from '../audio';
 
 const KINDS: { id: Concept['kind'] | 'all'; label: string }[] = [
@@ -84,7 +84,7 @@ export function Library() {
             </h2>
             {open.diagram && (
               <div className="diagram-card">
-                <DiagramView diagram={open.diagram} />
+                <DiagramPlayback diagram={open.diagram} />
               </div>
             )}
             <p className="lead">{open.summary}</p>
