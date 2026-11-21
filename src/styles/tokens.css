@@ -1,0 +1,60 @@
+:root {
+  color-scheme: dark;
+
+  /* Surfaces — "cosmic lab" */
+  --bg-0: #05071a;
+  --bg-1: #0a0f2c;
+  --bg-2: #111840;
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-2: rgba(255, 255, 255, 0.08);
+  --surface-strong: #151d4a;
+  --border: rgba(160, 180, 255, 0.14);
+  --border-strong: rgba(160, 180, 255, 0.28);
+
+  /* Text */
+  --text: #eef1ff;
+  --text-2: #aeb6dc;
+  --text-3: #7680ad;
+
+  /* Particles (also differentiated by line shape, never by color alone) */
+  --c-electron: #38d6ff;
+  --c-positron: #ff5fb4;
+  --c-photon: #ffc53d;
+  --c-virtual: #b69cff;
+
+  /* Semantic */
+  --accent: #7c5cff;
+  --accent-2: #38d6ff;
+  --success: #3ee08f;
+  --danger: #ff5d6c;
+  --warning: #ffc53d;
+
+  --grad-primary: linear-gradient(135deg, #7c5cff 0%, #38d6ff 100%);
+  --grad-warm: linear-gradient(135deg, #ff5fb4 0%, #ffc53d 100%);
+  --grad-success: linear-gradient(135deg, #22c37a 0%, #3ee0c4 100%);
+
+  /* Chapters */
+  --ch1: #38d6ff;
+  --ch2: #7c5cff;
+  --ch3: #ff5fb4;
+  --ch4: #ffc53d;
+  --ch5: #3ee08f;
+
+  --font-display: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+
+  --shadow-1: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 0 1px rgba(124, 92, 255, 0.4), 0 12px 40px -10px rgba(124, 92, 255, 0.55);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-max: 480px;
+}
