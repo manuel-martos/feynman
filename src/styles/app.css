@@ -1269,9 +1269,9 @@ p {
   margin-bottom: 6px;
 }
 .tab-panel .math {
-  font-family: 'STIX Two Math', 'Cambria Math', Georgia, serif;
-  font-size: 1.02rem;
-  line-height: 1.6;
+  /* Same typeface as the other layers; math fonts only fill in glyphs Inter lacks (𝓜, ψ̄…). */
+  font-family: 'Inter Variable', 'Inter', 'STIX Two Math', 'Cambria Math', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 .concept-chips {
   display: flex;
