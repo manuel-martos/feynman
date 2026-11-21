@@ -85,7 +85,7 @@ export function Settings() {
       <section className="card about">
         <h3 className="card-title">Acerca de</h3>
         <p className="muted">
-          Feynman Quest v{__APP_VERSION__}. {content.levels.length} niveles de electrodinámica cuántica (QED) de orden árbol. Convención: el tiempo avanza de izquierda a derecha.
+          Feynman Quest v{__APP_VERSION__}. {content.levels.length} niveles de electrodinámica cuántica (QED), del orden árbol a los bucles. Convención: el tiempo avanza de izquierda a derecha.
         </p>
         <p className="muted small">
           Un diagrama de Feynman representa una contribución a una amplitud de probabilidad, no una fotografía de trayectorias. Las soluciones las comprueba un validador determinista.

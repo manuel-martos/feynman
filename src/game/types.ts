@@ -45,6 +45,8 @@ export interface ChoiceOption {
 export interface ChoiceStep extends StepBase {
   kind: 'choice';
   diagram?: Diagram;
+  /** Show the diagram with "watch it in time" playback controls. */
+  playback?: boolean;
   /** Several labelled diagrams shown side by side (comparisons). */
   diagrams?: { label: string; diagram: Diagram }[];
   options: ChoiceOption[];

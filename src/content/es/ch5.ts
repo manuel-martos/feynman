@@ -183,7 +183,7 @@ export const chapter5: Level[] = [
         hints: ['En cuántica se suman amplitudes, no probabilidades.', 'Los fermiones son antisimétricos bajo intercambio.'],
       },
     ],
-    success: 'Campaña completada. Hablas el lenguaje del universo: lees, construyes y juzgas diagramas de Feynman.',
+    success: 'Dominas el orden árbol: lees, construyes y juzgas diagramas de Feynman. Ahora empieza lo de verdad: más vértices y bucles cuánticos.',
     explanation: {
       intuitive: 'Dos historias indistinguibles producen el mismo resultado final, y la naturaleza las combina con un signo menos que viene de la propia esencia de los electrones.',
       scientific:

@@ -52,7 +52,11 @@ const MESSAGES: Record<IssueCode, (i: Issue) => IssueText> = {
   }),
   LOOP: () => ({
     title: 'Hay un bucle',
-    body: 'Tu diagrama contiene un circuito cerrado (un bucle). Los bucles son correcciones de orden superior; en esta campaña buscamos diagramas de orden árbol.',
+    body: 'Tu diagrama contiene un circuito cerrado (un bucle). Los bucles son correcciones de orden superior; en este desafío buscamos diagramas de orden árbol.',
+  }),
+  FURRY: (i) => ({
+    title: 'Un bucle que se anula',
+    body: `Tu bucle de electrones tiene ${i.data?.photons} ${i.data?.photons === 1 ? 'fotón' : 'fotones'} enganchados: un número impar. Por el teorema de Furry, este bucle y el mismo recorrido en sentido contrario se cancelan exactamente.`,
   }),
   EXTERNAL_MISMATCH: (i) => ({
     title: 'Partícula equivocada',

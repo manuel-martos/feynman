@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { PROCESSES, channelOf, enumerateTree2to2, sameTopology, validate, type Diagram } from '../engine';
+import { PROCESSES, channelOf, enumerateTree2to2, enumerateTrees, fermionLoops, loopCount, sameTopology, validate, type Diagram } from '../engine';
 import type { BuildStep } from '../game/types';
 import { content } from './index';
 import { fourLineVertex, brokenMoller } from './es/ch2';
 import { mollerT, mollerTRedrawn, mollerU, bhabhaS, bhabhaT } from './es/ch4';
 import { brokenCompton, bogusBhabhaU } from './es/ch5';
 import { process, vertex } from './diagrams';
+import { bremsAfter, bremsBefore, threePhotons, threePhotonsSwapped } from './es/ch6';
+import { lightByLight, mollerBox, photonSelfEnergy, schwinger, triangle, vacuumPolarization, vertexCorrection } from './es/ch7';
 
 const { levels, chapters, concepts } = content;
 
@@ -26,14 +28,21 @@ const SOLUTIONS: Record<string, () => Diagram> = {
   '22/build': () => process('pairProduction', 't'),
   '24/t': () => process('moller', 't'),
   '24/u': () => process('moller', 'u'),
+  '25/build': bremsAfter,
+  '27/build': threePhotons,
+  '28/other': threePhotonsSwapped,
+  '30/build': vacuumPolarization,
+  '31/build': schwinger,
+  '32/box': lightByLight,
+  '34/box': mollerBox,
 };
 
 describe('campaign structure', () => {
-  it('has 24 levels in 5 chapters with the planned distribution', () => {
-    expect(levels).toHaveLength(24);
-    expect(levels.map((l) => l.id)).toEqual(Array.from({ length: 24 }, (_, i) => i + 1));
+  it('has 34 levels in 7 chapters with the planned distribution', () => {
+    expect(levels).toHaveLength(34);
+    expect(levels.map((l) => l.id)).toEqual(Array.from({ length: 34 }, (_, i) => i + 1));
     const per = chapters.map((c) => levels.filter((l) => l.chapter === c.id).length);
-    expect(per).toEqual([5, 5, 6, 4, 4]);
+    expect(per).toEqual([5, 5, 6, 4, 4, 4, 6]);
   });
 
   it('uses all three mechanics', () => {
@@ -122,5 +131,37 @@ describe('scientific claims made by the content', () => {
     expect(validate(bhabhaT(), { kinematics: true }).ok).toBe(true);
     const c = validate(bogusBhabhaU());
     expect(c.issues.map((i) => i.code)).toEqual(['VERTEX_FERMION_FLOW', 'VERTEX_FERMION_FLOW']);
+  });
+
+  const spec = (str: string) => {
+    const [i, o] = str.split('>').map((x) => x.trim().split(/\s+/));
+    return [
+      ...i.map((sp, k) => ({ id: `in${k + 1}`, kind: 'in' as const, species: sp as 'e-' })),
+      ...o.map((sp, k) => ({ id: `out${k + 1}`, kind: 'out' as const, species: sp as 'e-' })),
+    ];
+  };
+  it('L25–28: higher-order tree diagrams and their counts', () => {
+    expect(validate(bremsAfter(), { kinematics: true }).ok).toBe(true);
+    expect(validate(bremsBefore(), { kinematics: true }).ok).toBe(true);
+    expect(enumerateTrees(spec('e- e- > e- e- gamma'))).toHaveLength(8);
+    expect(enumerateTrees(spec('e- e+ > gamma gamma gamma'))).toHaveLength(6);
+    expect(sameTopology(threePhotons(), threePhotonsSwapped())).toBe(false);
+  });
+  it('L29–34: one-loop diagrams are valid and have exactly one loop', () => {
+    for (const d of [vertexCorrection(), vacuumPolarization(), lightByLight(), mollerBox(), photonSelfEnergy()]) {
+      expect(validate(d, { kinematics: true, loops: 1 }).issues).toEqual([]);
+      expect(loopCount(d)).toBe(1);
+    }
+    expect(validate(schwinger(), { loops: 1 }).ok).toBe(true);
+    expect(validate(vertexCorrection()).issues[0].code).toBe('LOOP');
+  });
+  it('L32: light-by-light has no tree diagram', () => {
+    expect(enumerateTrees(spec('gamma gamma > gamma gamma'))).toHaveLength(0);
+    expect(fermionLoops(lightByLight())).toHaveLength(1);
+  });
+  it("L33: odd photon loops are cancelled (Furry), even ones are not", () => {
+    expect(validate(triangle(), { loops: 1 }).issues.map((i) => i.code)).toEqual(['FURRY']);
+    expect(validate(triangle(true), { loops: 1 }).issues.map((i) => i.code)).toEqual(['FURRY']);
+    expect(validate(photonSelfEnergy(), { loops: 1 }).ok).toBe(true);
   });
 });

@@ -1713,3 +1713,95 @@ p {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
 }
+
+/* ---------- playback ("Ver en el tiempo") ---------- */
+.playback {
+  display: grid;
+  gap: 10px;
+}
+.playback-caption {
+  min-height: 124px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.playback-caption strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  margin-bottom: 4px;
+}
+.playback-caption p {
+  margin: 0;
+  line-height: 1.45;
+}
+.playback-hint {
+  color: var(--text-2);
+  font-size: 0.92rem;
+}
+.caption-in {
+  animation: screen-in 0.35s var(--ease-out);
+}
+.charge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  background: rgba(62, 224, 143, 0.12);
+  border: 1px solid rgba(62, 224, 143, 0.35);
+  color: #b6f5d3;
+}
+.charge-chip b {
+  color: var(--success);
+}
+.playback-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.play-btn {
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 0.95rem;
+}
+.play-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+.play-btn svg .fill {
+  fill: currentColor;
+  stroke: none;
+}
+.playback-bar .icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.playback-steps {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.playback-steps i {
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  transition: background 0.3s, width 0.3s;
+}
+.playback-steps i.on {
+  background: var(--accent-2);
+}

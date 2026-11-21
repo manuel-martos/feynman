@@ -23,6 +23,8 @@ export interface ValidationOptions {
   channel?: Channel;
   /** Require a contribution topologically different from these diagrams. */
   differentFrom?: Diagram[];
+  /** Number of independent loops allowed (0 = tree level, the default). */
+  loops?: number;
 }
 
 export interface ValidationResult {
@@ -37,7 +39,7 @@ export interface ValidationResult {
  * plus level-specific goals.
  */
 export function validate(d: Diagram, opts: ValidationOptions = {}): ValidationResult {
-  const structural = structuralIssues(d);
+  const structural = structuralIssues(d, opts.loops ?? 0);
   const theory = theoryIssues(d);
   const issues: Issue[] = [...structural, ...theory];
 
@@ -47,7 +49,7 @@ export function validate(d: Diagram, opts: ValidationOptions = {}): ValidationRe
   return { ok: issues.length === 0, issues };
 }
 
-export function structuralIssues(d: Diagram): Issue[] {
+export function structuralIssues(d: Diagram, maxLoops = 0): Issue[] {
   const issues: Issue[] = [];
   const nodes = nodeMap(d);
 
@@ -93,7 +95,7 @@ export function structuralIssues(d: Diagram): Issue[] {
     const edgeIds = d.edges.filter((e) => detached.includes(e.from)).map((e) => e.id);
     issues.push({ code: 'DISCONNECTED', layer: 'structural', elements: [...detached, ...edgeIds] });
   }
-  if (cycleEdges.length) issues.push({ code: 'LOOP', layer: 'structural', elements: cycleEdges });
+  if (cycleEdges.length > maxLoops) issues.push({ code: 'LOOP', layer: 'structural', elements: cycleEdges });
 
   return issues;
 }
@@ -176,6 +178,11 @@ export function physicalIssues(d: Diagram, opts: ValidationOptions): Issue[] {
   if (initial !== final) {
     issues.push({ code: 'CHARGE_NOT_CONSERVED', layer: 'physical', elements: [], data: { initial, final } });
   }
+  // Furry's theorem: a closed electron loop with an odd number of photons
+  // attached cancels against the same loop with the opposite orientation.
+  for (const loop of fermionLoops(d)) {
+    if (loop.length % 2 === 1) issues.push({ code: 'FURRY', layer: 'physical', elements: loop, data: { photons: loop.length } });
+  }
   if (opts.kinematics) {
     const vertices = d.nodes.filter((n) => n.kind === 'vertex');
     const externals = d.nodes.filter(isExternal);
@@ -186,4 +193,22 @@ export function physicalIssues(d: Diagram, opts: ValidationOptions): Issue[] {
     }
   }
   return issues;
+}
+
+/**
+ * Closed fermion loops: groups of vertices joined by fermion lines that never
+ * reach an external particle. Returns the vertex ids of each loop.
+ */
+export function fermionLoops(d: Diagram): string[][] {
+  const ds = new DisjointSet();
+  const fermions = d.edges.filter((e) => e.type === 'fermion' && e.from !== e.to);
+  for (const e of fermions) ds.union(e.from, e.to);
+  const groups = new Map<string, Set<string>>();
+  for (const e of fermions) {
+    const r = ds.find(e.from);
+    if (!groups.has(r)) groups.set(r, new Set());
+    groups.get(r)!.add(e.from).add(e.to);
+  }
+  const nodes = nodeMap(d);
+  return [...groups.values()].map((g) => [...g]).filter((g) => g.every((id) => nodes.get(id)?.kind === 'vertex'));
 }
