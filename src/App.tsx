@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useGame } from './game/store';
 import { setSoundEnabled } from './ui/audio';
 import { useRoute } from './ui/router';
+import { BottomNav } from './ui/components/BottomNav';
 import { Home } from './ui/screens/Home';
 import { LevelScreen } from './ui/screens/LevelScreen';
 import { Library } from './ui/screens/Library';
@@ -24,6 +25,7 @@ export function App() {
     window.scrollTo({ top: 0 });
   }, [route.name]);
 
+  const showNav = onboarded && ['home', 'map', 'library', 'settings'].includes(route.name);
   let screen;
   if (!onboarded && route.name !== 'level') screen = <Onboarding />;
   else
@@ -51,6 +53,8 @@ export function App() {
     <div className="app">
       <div className="cosmos" aria-hidden />
       <main className="app-frame">{screen}</main>
+      {/* Lives outside the animated screen so it never moves or remounts. */}
+      {showNav && <BottomNav active={route.name} />}
     </div>
   );
 }

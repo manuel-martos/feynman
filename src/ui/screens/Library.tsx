@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { content } from '../../content';
 import { useGame } from '../../game/store';
 import type { Concept } from '../../game/types';
-import { BottomNav } from '../components/BottomNav';
 import { DiagramView } from '../diagram/DiagramView';
 import { sfx } from '../audio';
 
@@ -93,7 +92,6 @@ export function Library() {
           </div>
         </div>
       )}
-      <BottomNav active="library" />
     </div>
   );
 }

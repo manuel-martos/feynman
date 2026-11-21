@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { content } from '../../content';
 import { isLevelUnlocked, useGame } from '../../game/store';
-import { BottomNav } from '../components/BottomNav';
 import { Stars } from '../components/Stars';
 import { navigate } from '../router';
 
@@ -21,7 +20,9 @@ export function MapScreen({ chapter: focus }: { chapter?: number }) {
     <div className="screen map with-nav">
       <header className="page-head">
         <h1>Campaña</h1>
-        <p>24 niveles · 5 capítulos</p>
+        <p>
+          {content.levels.length} niveles · {content.chapters.length} capítulos
+        </p>
       </header>
       {content.chapters.map((ch) => {
         const levels = content.levels.filter((l) => l.chapter === ch.id);
@@ -76,7 +77,6 @@ export function MapScreen({ chapter: focus }: { chapter?: number }) {
           </section>
         );
       })}
-      <BottomNav active="map" />
     </div>
   );
 }

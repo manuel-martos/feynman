@@ -55,3 +55,23 @@ test('build level: drag a photon between vertices', async ({ page }) => {
   await page.getByRole('button', { name: 'Ver resultado' }).click();
   await expect(page.getByRole('img', { name: '2 de 3 estrellas' })).toBeVisible();
 });
+
+test('bottom nav stays put across sections and tracks the active tab', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.setItem('feynman-quest', JSON.stringify({ state: { onboarded: true }, version: 1 })));
+  await page.reload();
+  const nav = page.locator('.bottom-nav');
+  const home = await nav.boundingBox();
+  const tabs = ['Campaña', 'Colección', 'Ajustes', 'Inicio'];
+  for (const [i, name] of tabs.entries()) {
+    await nav.getByRole('link', { name }).click();
+    await expect(nav).toHaveCount(1);
+    await expect(nav.getByRole('link', { name })).toHaveAttribute('aria-current', 'page');
+    expect(await nav.boundingBox()).toEqual(home);
+    await expect(nav).toHaveCSS('--i', String((i + 1) % 4));
+  }
+  await nav.getByRole('link', { name: 'Campaña' }).click();
+  await page.mouse.wheel(0, 800);
+  await expect(nav).toBeInViewport();
+  expect(await nav.boundingBox()).toEqual(home);
+});
