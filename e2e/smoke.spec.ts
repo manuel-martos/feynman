@@ -75,3 +75,44 @@ test('bottom nav stays put across sections and tracks the active tab', async ({ 
   await expect(nav).toBeInViewport();
   expect(await nav.boundingBox()).toEqual(home);
 });
+
+async function unlockUpTo(page: Page, last: number) {
+  await page.goto('/');
+  await page.evaluate((last) => {
+    const progress: Record<number, { stars: number; completions: number }> = {};
+    for (let i = 1; i <= last; i++) progress[i] = { stars: 3, completions: 1 };
+    localStorage.setItem('feynman-quest', JSON.stringify({ version: 1, state: { onboarded: true, progress, settings: { sound: false, haptics: false, reducedMotion: true } } }));
+  }, last);
+}
+
+test('loop level: two lines between the same vertices close the vacuum bubble', async ({ page }) => {
+  await unlockUpTo(page, 29);
+  await page.goto('/#/level/30');
+  await page.reload();
+  await page.getByRole('button', { name: 'Empezar' }).click();
+  await drag(page, 'v1', 'v2');
+  await drag(page, 'v2', 'v1');
+  await expect(page.locator('[data-edge]')).toHaveCount(8);
+  await page.getByRole('button', { name: 'Comprobar' }).click();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await page.getByRole('listitem').filter({ hasText: 'la carga efectiva aumenta' }).click();
+  await page.getByRole('button', { name: 'Ver resultado' }).click();
+
+  // The result screen tells the story of the diagram in time.
+  await page.getByRole('button', { name: 'Reproducir en el tiempo' }).click();
+  await expect(page.getByText('Entran dos electrones.')).toBeVisible();
+  await expect(page.getByText('se convierte en un par')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('.charge-chip').first()).toContainText('0 → −1 + 1');
+});
+
+test('light-by-light: build the electron box', async ({ page }) => {
+  await unlockUpTo(page, 31);
+  await page.goto('/#/level/32');
+  await page.reload();
+  await page.getByRole('button', { name: 'Empezar' }).click();
+  await page.getByRole('listitem').filter({ hasText: 'No: sin fermiones' }).click();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  for (const [a, b] of [['a', 'b'], ['b', 'c'], ['c', 'd'], ['d', 'a']]) await drag(page, a, b);
+  await page.getByRole('button', { name: 'Comprobar' }).click();
+  await expect(page.getByRole('button', { name: 'Ver resultado' })).toBeVisible();
+});

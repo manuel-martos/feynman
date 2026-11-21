@@ -1,6 +1,8 @@
 import type { Chapter, Concept } from '../../game/types';
 import { emission, plain, process } from '../diagrams';
 import { mollerT, mollerU } from './ch4';
+import { bremsAfter, threePhotons } from './ch6';
+import { lightByLight, photonSelfEnergy, schwinger, triangle, vertexCorrection } from './ch7';
 
 export const chapters: Chapter[] = [
   { id: 1, title: 'El alfabeto cuántico', subtitle: 'Líneas, flechas y partículas', goals: 'Reconoce electrones, positrones y fotones. Descubre que un diagrama no es una trayectoria.', color: 'var(--ch1)' },
@@ -8,6 +10,8 @@ export const chapters: Chapter[] = [
   { id: 3, title: 'Partículas que interactúan', subtitle: 'Intercambios y líneas virtuales', goals: 'Combina dos vértices, construye intercambios y distingue las líneas internas de las externas.', color: 'var(--ch3)' },
   { id: 4, title: 'Múltiples posibilidades', subtitle: 'Un proceso, varias historias', goals: 'Reconoce diagramas equivalentes y las distintas contribuciones a un mismo proceso.', color: 'var(--ch4)' },
   { id: 5, title: 'El desafío final', subtitle: 'Sin instrucciones paso a paso', goals: 'Interpreta, construye y justifica soluciones por tu cuenta.', color: 'var(--ch5)' },
+  { id: 6, title: 'Más vértices, más historias', subtitle: 'Orden superior', goals: 'Construye procesos de tres vértices, cuenta todas sus contribuciones y descubre cómo se combinan los bosones idénticos.', color: 'var(--ch6)' },
+  { id: 7, title: 'Bucles cuánticos', subtitle: 'Más allá del árbol', goals: 'Reconoce y construye bucles: la polarización del vacío, el número de Schwinger, la luz que dispersa luz y el teorema de Furry.', color: 'var(--ch7)' },
 ];
 
 export const concepts: Concept[] = [
@@ -36,5 +40,13 @@ export const concepts: Concept[] = [
   { id: 'contributions', title: 'Contar diagramas', kind: 'idea', summary: 'Todos los diagramas, ni uno más ni uno menos.', body: 'El primer paso de un cálculo es enumerar todas las contribuciones topológicamente distintas al orden deseado.' },
   { id: 'pair-production', title: 'Creación de pares', kind: 'process', symbol: 'γγ→e⁻e⁺', summary: 'Materia a partir de luz.', body: 'Dos fotones con suficiente energía pueden crear un electrón y un positrón (proceso de Breit–Wheeler).', diagram: plain(process('pairProduction', 't')) },
   { id: 'order', title: 'Orden perturbativo', kind: 'idea', symbol: 'α', summary: 'Cada vértice aporta un factor e.', body: 'Con n vértices, la amplitud va como eⁿ. Como α ≈ 1/137 es pequeña, los diagramas con más vértices contribuyen cada vez menos.' },
+  { id: 'bremsstrahlung', title: 'Radiación de frenado', kind: 'process', symbol: 'e⁻e⁻→e⁻e⁻γ', summary: 'Una carga desviada emite luz.', body: 'Bremsstrahlung, en alemán. Es un proceso de tres vértices, suprimido por un factor α respecto a la dispersión sin fotón. Así pierden energía los electrones rápidos en la materia y así funcionan los tubos de rayos X.', diagram: plain(bremsAfter()) },
+  { id: 'positronium', title: 'Positronio', kind: 'process', symbol: 'e⁻e⁺→γγγ', summary: 'Un átomo de materia y antimateria.', body: 'Un electrón y un positrón ligados. Con espines paralelos (orto-positronio) solo puede desintegrarse en tres fotones y vive unos 142 ns; con espines opuestos (para-positronio), en dos, y vive unos 0,12 ns.', diagram: plain(threePhotons()) },
+  { id: 'bosons', title: 'Bosones idénticos', kind: 'idea', summary: 'Intercambiarlos no cambia el signo.', body: 'Las amplitudes de fotones idénticos se suman con el mismo signo (simétricas). Las de fermiones idénticos, con signo alterno (antisimétricas). De ahí vienen el láser y el principio de exclusión.' },
+  { id: 'loop', title: 'Bucle', kind: 'idea', symbol: '↻', summary: 'Un circuito cerrado de líneas internas.', body: 'Cada bucle deja un momento libre que hay que integrar. Los bucles son correcciones cuánticas suprimidas por un factor α, y su estudio llevó a la renormalización.', diagram: plain(vertexCorrection()) },
+  { id: 'vacuum-polarization', title: 'Polarización del vacío', kind: 'process', summary: 'El vacío apantalla las cargas.', body: 'Los pares virtuales electrón–positrón hacen que la carga efectiva crezca a distancias cortas: α pasa de ≈ 1/137 a ≈ 1/128 a la energía del bosón Z.', diagram: plain(photonSelfEnergy()) },
+  { id: 'g-2', title: 'Momento magnético anómalo', kind: 'idea', symbol: 'g−2', summary: 'a = α/2π: el resultado de Schwinger.', body: 'El bucle de vértice corrige el imán del electrón en un 0,116 %. Es la predicción más precisa de la ciencia: teoría y experimento coinciden en más de 10 cifras.', diagram: plain(schwinger()) },
+  { id: 'light-by-light', title: 'Luz contra luz', kind: 'process', symbol: 'γγ→γγ', summary: 'Fotones que rebotan entre sí.', body: 'Imposible en física clásica. En QED ocurre a través de un bucle de electrones virtuales (6 diagramas de caja). ATLAS la observó en 2017.', diagram: plain(lightByLight()) },
+  { id: 'furry', title: 'Teorema de Furry', kind: 'rule', summary: 'Bucles con un número impar de fotones se anulan.', body: 'Las dos orientaciones de un bucle de electrones se cancelan cuando lleva un número impar de fotones. Es una consecuencia de la simetría de conjugación de carga.', diagram: plain(triangle()) },
   { id: 'interference', title: 'Interferencia', kind: 'idea', summary: 'Se suman amplitudes, no probabilidades.', body: 'Los diagramas se combinan antes de elevar al cuadrado. Para fermiones idénticos, el intercambio aporta un signo menos.' },
 ];

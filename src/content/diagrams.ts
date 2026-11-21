@@ -75,3 +75,29 @@ export const emission = () =>
     { id: 'out1', kind: 'out', species: 'e-', x: 90, y: 50 },
     { id: 'g', kind: 'out', species: 'gamma', x: 82, y: 12 },
   ], [48, 50]);
+
+export type NodeSpec = [kind: 'in' | 'out' | 'vertex', x: number, y: number, expect?: Species, tag?: string];
+
+/**
+ * Compact diagram builder for hand-drawn fixtures.
+ * Edges: "a>b" fermion with the arrow a → b, "a~b" photon; append "@0.3" to bend.
+ * Edge ids: the external node id for external legs, otherwise "a-b".
+ */
+export function graph(nodes: Record<string, NodeSpec>, edges: string[] = [], locked = true): Diagram {
+  const kinds = new Map(Object.entries(nodes).map(([id, n]) => [id, n[0]]));
+  return {
+    nodes: Object.entries(nodes).map(([id, [kind, x, y, expect, tag]]) => ({ id, kind, x, y, ...(expect ? { expect } : {}), ...(tag ? { tag } : {}) })),
+    edges: edges.map((spec) => {
+      const [body, bend] = spec.split('@');
+      const photon = body.includes('~');
+      const [from, to] = body.split(photon ? '~' : '>');
+      const ext = [from, to].find((x) => kinds.get(x) !== 'vertex');
+      return { id: ext ?? `${from}-${to}`, type: photon ? 'photon' : 'fermion', from, to, locked, ...(bend ? { bend: Number(bend) } : {}) } as DiagramEdge;
+    }),
+  };
+}
+
+/** Same nodes, only the listed edges kept (as locked puzzle pieces). */
+export function keepEdges(d: Diagram, ids: string[]): Diagram {
+  return { nodes: d.nodes.map((n) => ({ ...n })), edges: d.edges.filter((e) => ids.includes(e.id)).map((e) => ({ ...e, locked: true })) };
+}
