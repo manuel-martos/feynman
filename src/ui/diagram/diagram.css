@@ -1,0 +1,228 @@
+.diagram {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- time axis ---------- */
+.time-axis line {
+  stroke: var(--text-3);
+  stroke-width: 0.3;
+  stroke-dasharray: 0.8 1;
+}
+.time-axis path {
+  fill: var(--text-3);
+}
+.time-axis text {
+  fill: var(--text-3);
+  font: 500 2.3px var(--font-body);
+  text-anchor: middle;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ---------- edges ---------- */
+.edge {
+  --c: var(--text-2);
+  transition: opacity 0.3s;
+}
+.edge.electron { --c: var(--c-electron); }
+.edge.positron { --c: var(--c-positron); }
+.edge.photon { --c: var(--c-photon); }
+.edge.virtual { --c: var(--c-virtual); }
+
+.edge-line {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke-width 0.2s var(--ease-out);
+}
+.edge.photon .edge-line { stroke-width: 0.75; }
+.edge.virtual .edge-line { stroke-dasharray: none; }
+
+.edge-flow {
+  fill: none;
+  stroke: #fff;
+  stroke-opacity: 0.55;
+  stroke-width: 0.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0.6 7;
+  animation: flow 1.8s linear infinite;
+  pointer-events: none;
+}
+.edge.photon .edge-flow {
+  stroke-dasharray: 1.2 10;
+  animation-duration: 2.6s;
+}
+.edge-arrow {
+  fill: var(--c);
+  stroke: var(--c);
+  stroke-width: 0.25;
+  stroke-linejoin: round;
+}
+
+@keyframes flow {
+  to { stroke-dashoffset: -15.2; }
+}
+
+.edge.is-selected .edge-line { stroke-width: 1.8; }
+.edge.is-selected { --c: #fff; }
+.edge.is-error { --c: var(--danger); animation: shake 0.45s var(--ease-out); }
+.edge.is-error .edge-line { stroke-width: 1.4; }
+.edge.is-dim, .edge-label.is-dim { opacity: 0.22; }
+.edge.is-focus .edge-line { stroke-width: 1.5; }
+.edge.is-editable .edge-line { stroke-width: 1.05; }
+
+.edge-label {
+  font: 700 4px var(--font-display);
+  text-anchor: middle;
+  fill: var(--c, var(--text));
+  paint-order: stroke;
+  stroke: var(--bg-1);
+  stroke-width: 1.2px;
+  stroke-linejoin: round;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.edge-label.electron { --c: var(--c-electron); }
+.edge-label.positron { --c: var(--c-positron); }
+.edge-label.photon { --c: var(--c-photon); }
+.edge-label.virtual { --c: var(--c-virtual); }
+.edge-label.is-error { --c: var(--danger); }
+.edge-label.is-selected { --c: #fff; }
+
+/* ---------- nodes ---------- */
+.vertex-halo {
+  fill: var(--accent);
+  opacity: 0.18;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: breathe 2.8s ease-in-out infinite;
+}
+.vertex-ring {
+  fill: var(--bg-1);
+  stroke: #dcd4ff;
+  stroke-width: 0.5;
+}
+.vertex-core { fill: #fff; }
+.vertex.is-open .vertex-ring {
+  stroke-dasharray: 1 0.9;
+  stroke: var(--text-2);
+}
+.vertex.is-open .vertex-core { fill: var(--text-3); }
+.vertex-socket { fill: var(--text-3); }
+
+.vertex.is-selected .vertex-halo, .external.is-selected .ext-halo { fill: #fff; opacity: 0.4; }
+.vertex.is-error .vertex-ring { stroke: var(--danger); stroke-width: 0.8; }
+.vertex.is-error .vertex-halo { fill: var(--danger); opacity: 0.4; }
+.node.is-snap .vertex-halo, .node.is-snap .ext-halo { fill: var(--c-electron); opacity: 0.55; animation: none; transform: scale(1.35); }
+.node.is-active .vertex-halo, .node.is-active .ext-halo { fill: #fff; opacity: 0.5; }
+.node.is-dim { opacity: 0.35; }
+
+.ext-halo {
+  fill: var(--text-2);
+  opacity: 0.08;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.2s var(--ease-spring);
+}
+.ext-dot {
+  fill: var(--bg-1);
+  stroke: var(--text-2);
+  stroke-width: 0.45;
+}
+.external.is-error .ext-dot { stroke: var(--danger); stroke-width: 0.8; }
+.ext-tag {
+  font: 600 2.6px var(--font-body);
+  fill: var(--text-3);
+  text-anchor: middle;
+}
+.ext-expect {
+  font: 700 3.2px var(--font-display);
+  text-anchor: middle;
+  opacity: 0.55;
+}
+.ext-expect.electron { fill: var(--c-electron); }
+.ext-expect.positron { fill: var(--c-positron); }
+.ext-expect.photon { fill: var(--c-photon); }
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.16; }
+  50% { transform: scale(1.25); opacity: 0.3; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-0.8px); }
+  40% { transform: translateX(0.8px); }
+  60% { transform: translateX(-0.5px); }
+  80% { transform: translateX(0.5px); }
+}
+
+/* ---------- hit targets ---------- */
+.hit {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 7;
+  cursor: pointer;
+  outline: none;
+}
+circle.hit { stroke-width: 0; }
+.hit:focus-visible {
+  stroke: rgba(255, 255, 255, 0.25);
+  stroke-width: 6;
+}
+circle.hit:focus-visible { fill: rgba(255, 255, 255, 0.15); }
+
+/* ---------- success ---------- */
+.diagram.is-success .edge-line {
+  stroke-dasharray: 160;
+  animation: draw 0.9s var(--ease-out) both;
+  animation-delay: calc(var(--i) * 90ms);
+}
+.diagram.is-success .edge-flow { stroke-opacity: 0.9; }
+.diagram.is-success .vertex-halo {
+  fill: var(--success);
+  animation: burst 1.2s var(--ease-out) both, breathe 2.8s 1.2s ease-in-out infinite;
+}
+@keyframes draw {
+  from { stroke-dashoffset: 160; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes burst {
+  0% { transform: scale(0.4); opacity: 0.9; }
+  60% { transform: scale(2.2); opacity: 0.25; }
+  100% { transform: scale(1); opacity: 0.2; }
+}
+
+/* ---------- ghost (editor) ---------- */
+.ghost-line {
+  fill: none;
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  stroke-dasharray: 1.2 1.2;
+  opacity: 0.85;
+  pointer-events: none;
+}
+.ghost-line.fermion { stroke: #fff; }
+.ghost-line.photon { stroke: var(--c-photon); stroke-dasharray: none; }
+.ghost-arrow { fill: #fff; opacity: 0.85; }
+
+.diagram.is-compact .edge-line { stroke-width: 1.3; }
+.diagram.is-compact .edge-flow { display: none; }
+.diagram.is-compact .vertex-halo { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .edge-flow, .vertex-halo { animation: none !important; }
+  .diagram.is-success .edge-line { animation: none; stroke-dasharray: none; }
+  .edge.is-error { animation: none; }
+}
+:root[data-motion='reduced'] .edge-flow,
+:root[data-motion='reduced'] .vertex-halo { animation: none !important; }
+:root[data-motion='reduced'] .diagram.is-success .edge-line { animation: none; stroke-dasharray: none; }
