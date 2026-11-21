@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as RPointer
 import { degree, isExternal, newId, nodeMap, type Diagram, type DiagramEdge, type EdgeType } from '../../engine';
 import { sfx } from '../audio';
 import { DiagramView, VIEW_H, VIEW_W } from './DiagramView';
-import { arrowHead, distToSegment, straightOrCurvedPath, wavyPath, type Pt } from './geometry';
+import { arrowHead, controlPoint, quadAt, straightOrCurvedPath, wavyPath, type Pt } from './geometry';
 
 export interface DiagramEditorProps {
   diagram: Diagram;
@@ -12,12 +12,34 @@ export interface DiagramEditorProps {
   success?: boolean;
   disabled?: boolean;
   onNotice?: (msg: string) => void;
+  /** Allow a second line between the same two vertices (loop levels). */
+  allowParallel?: boolean;
 }
 
 const NODE_GRAB = 8;
+const BEND = 0.42;
+
+function distToCurve(p: Pt, a: Pt, b: Pt, bend = 0): number {
+  const c = controlPoint(a, b, bend);
+  let best = Infinity;
+  for (let i = 0; i <= 24; i++) {
+    const q = quadAt(a, c, b, i / 24);
+    best = Math.min(best, Math.hypot(q.x - p.x, q.y - p.y));
+  }
+  return best;
+}
+
+/** If a straight line would run over another node, bend it around. */
+function clearBend(a: Pt, b: Pt, others: Pt[]): number {
+  const clearance = (bend: number) => Math.min(Infinity, ...others.map((o) => distToCurve(o, a, b, bend)));
+  if (clearance(0) >= 4) return 0;
+  let best = 0;
+  for (const bend of [0.2, -0.2, 0.3, -0.3, 0.45, -0.45]) if (clearance(bend) > clearance(best) + 0.5) best = bend;
+  return best;
+}
 const SNAP = 10;
 
-export function DiagramEditor({ diagram, onChange, palette, errors, success, disabled, onNotice }: DiagramEditorProps) {
+export function DiagramEditor({ diagram, onChange, palette, errors, success, disabled, onNotice, allowParallel }: DiagramEditorProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [tool, setTool] = useState<EdgeType>(palette[0] ?? 'fermion');
   type Drag = { from: string; to: Pt; moved: boolean };
@@ -83,7 +105,9 @@ export function DiagramEditor({ diagram, onChange, palette, errors, success, dis
         onNotice?.('Cada partícula externa debe llegar a un vértice: ahí es donde ocurre la interacción.');
         return;
       }
-      if (diagram.edges.some((e) => (e.from === from && e.to === to) || (e.from === to && e.to === from))) {
+      if (from === to) return;
+      const parallel = diagram.edges.filter((e) => (e.from === from && e.to === to) || (e.from === to && e.to === from));
+      if (parallel.length && (!allowParallel || parallel.length >= 2 || isExternal(a) || isExternal(b))) {
         sfx('deny');
         onNotice?.('Ya hay una línea entre esos dos puntos.');
         return;
@@ -99,12 +123,27 @@ export function DiagramEditor({ diagram, onChange, palette, errors, success, dis
           return;
         }
       }
-      const edge: DiagramEdge = { id: newId(), type: tool, from, to, locked: false };
+      let edges = diagram.edges;
+      let bend = 0;
+      if (parallel.length) {
+        // Two lines between the same vertices: curve them apart.
+        const old = parallel[0];
+        const canon = (e: { from: string; to: string }) => (e.from < e.to ? 1 : -1);
+        let side = (old.bend ?? 0) * canon(old);
+        if (!side) {
+          side = -BEND;
+          if (old.locked === false) edges = edges.map((e) => (e === old ? { ...e, bend: side * canon(old) } : e));
+        }
+        bend = (side > 0 ? -BEND : BEND) * canon({ from, to });
+      } else {
+        bend = clearBend(a, b, diagram.nodes.filter((n) => n.id !== from && n.id !== to));
+      }
+      const edge: DiagramEdge = { id: newId(), type: tool, from, to, locked: false, ...(bend ? { bend } : {}) };
       sfx('connect');
       navigator.vibrate?.(12);
-      commit({ ...diagram, edges: [...diagram.edges, edge] });
+      commit({ ...diagram, edges: [...edges, edge] });
     },
-    [diagram, tool, onNotice],
+    [diagram, tool, onNotice, allowParallel],
   );
 
   const edgeAt = (p: Pt) => {
@@ -114,7 +153,7 @@ export function DiagramEditor({ diagram, onChange, palette, errors, success, dis
       const a = nodes.get(e.from);
       const b = nodes.get(e.to);
       if (!a || !b) continue;
-      const dd = distToSegment(p, a, b);
+      const dd = distToCurve(p, a, b, e.bend);
       if (dd < bestD) {
         bestD = dd;
         best = e;

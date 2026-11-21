@@ -80,3 +80,43 @@ export function channelOf(d: Diagram): Channel | null {
 export function couplingOrder(d: Diagram): number {
   return d.nodes.filter((n) => n.kind === 'vertex').length;
 }
+
+/** Edges that lie on a closed loop (removing them keeps the graph connected). */
+export function loopEdges(d: Diagram): string[] {
+  return d.edges
+    .filter((cut) => {
+      if (cut.from === cut.to) return true;
+      const seen = new Set([cut.from]);
+      const stack = [cut.from];
+      while (stack.length) {
+        const id = stack.pop()!;
+        for (const e of d.edges) {
+          if (e === cut || (e.from !== id && e.to !== id)) continue;
+          const nxt = otherEnd(e, id);
+          if (!seen.has(nxt)) {
+            seen.add(nxt);
+            stack.push(nxt);
+          }
+        }
+      }
+      return seen.has(cut.to);
+    })
+    .map((e) => e.id);
+}
+
+/** Number of independent loops: E − N + (connected components). */
+export function loopCount(d: Diagram): number {
+  const used = new Set(d.edges.flatMap((e) => [e.from, e.to]));
+  const parent = new Map<string, string>();
+  const find = (x: string): string => (parent.get(x) ?? x) === x ? x : find(parent.get(x)!);
+  let components = used.size;
+  for (const e of d.edges) {
+    const a = find(e.from);
+    const b = find(e.to);
+    if (a !== b) {
+      parent.set(a, b);
+      components--;
+    }
+  }
+  return d.edges.length - used.size + components;
+}

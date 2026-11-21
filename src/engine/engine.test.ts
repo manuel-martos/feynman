@@ -123,3 +123,97 @@ describe('enumerator', () => {
   it('Compton: s and u', () => expect(channels('compton')).toEqual(['s', 'u']));
   it('Pair production: t and u', () => expect(channels('pairProduction')).toEqual(['t', 'u']));
 });
+
+import { enumerateTrees, fermionLoops, loopCount, loopEdges, timeline } from './index';
+import type { ExternalSpec } from './enumerate';
+
+const ext = (spec: string): ExternalSpec[] => {
+  // "e- e- > e- e- gamma"
+  const [i, o] = spec.split('>').map((s) => s.trim().split(/\s+/));
+  return [
+    ...i.map((s, k) => ({ id: `in${k + 1}`, kind: 'in' as const, species: s as ExternalSpec['species'] })),
+    ...o.map((s, k) => ({ id: `out${k + 1}`, kind: 'out' as const, species: s as ExternalSpec['species'] })),
+  ];
+};
+
+describe('enumerateTrees', () => {
+  it('reproduces the 2 → 2 counts', () => {
+    expect(enumerateTrees(ext('e- e- > e- e-'))).toHaveLength(2);
+    expect(enumerateTrees(ext('e- e+ > e- e+'))).toHaveLength(2);
+    expect(enumerateTrees(ext('e- gamma > e- gamma'))).toHaveLength(2);
+  });
+  it('counts higher-order trees', () => {
+    expect(enumerateTrees(ext('e- e- > e- e- gamma'))).toHaveLength(8);
+    expect(enumerateTrees(ext('e- e+ > gamma gamma gamma'))).toHaveLength(6);
+    expect(enumerateTrees(ext('gamma gamma > gamma gamma'))).toHaveLength(0);
+  });
+});
+
+const box = (): Diagram => ({
+  nodes: [
+    { id: 'in1', kind: 'in', x: 0, y: 0 },
+    { id: 'in2', kind: 'in', x: 0, y: 1 },
+    { id: 'out1', kind: 'out', x: 1, y: 0 },
+    { id: 'out2', kind: 'out', x: 1, y: 1 },
+    { id: 'a', kind: 'vertex', x: 0.3, y: 0 },
+    { id: 'b', kind: 'vertex', x: 0.7, y: 0 },
+    { id: 'c', kind: 'vertex', x: 0.7, y: 1 },
+    { id: 'd', kind: 'vertex', x: 0.3, y: 1 },
+  ],
+  edges: [
+    { id: 'g1', type: 'photon', from: 'in1', to: 'a' },
+    { id: 'g2', type: 'photon', from: 'in2', to: 'd' },
+    { id: 'g3', type: 'photon', from: 'out1', to: 'b' },
+    { id: 'g4', type: 'photon', from: 'out2', to: 'c' },
+    { id: 'ab', type: 'fermion', from: 'a', to: 'b' },
+    { id: 'bc', type: 'fermion', from: 'b', to: 'c' },
+    { id: 'cd', type: 'fermion', from: 'c', to: 'd' },
+    { id: 'da', type: 'fermion', from: 'd', to: 'a' },
+  ],
+});
+
+describe('loops', () => {
+  it('rejects loops at tree level and accepts them when allowed', () => {
+    expect(validate(box()).issues[0].code).toBe('LOOP');
+    expect(validate(box(), { loops: 1, kinematics: true }).ok).toBe(true);
+    expect(loopCount(box())).toBe(1);
+    expect(loopEdges(box()).sort()).toEqual(['ab', 'bc', 'cd', 'da']);
+    expect(fermionLoops(box())[0].sort()).toEqual(['a', 'b', 'c', 'd']);
+  });
+  it("applies Furry's theorem to odd photon loops", () => {
+    const tri: Diagram = {
+      nodes: [
+        { id: 'in1', kind: 'in', x: 0, y: 0 },
+        { id: 'out1', kind: 'out', x: 1, y: 0 },
+        { id: 'out2', kind: 'out', x: 1, y: 1 },
+        { id: 'a', kind: 'vertex', x: 0.3, y: 0.5 },
+        { id: 'b', kind: 'vertex', x: 0.7, y: 0 },
+        { id: 'c', kind: 'vertex', x: 0.7, y: 1 },
+      ],
+      edges: [
+        { id: 'g1', type: 'photon', from: 'in1', to: 'a' },
+        { id: 'g2', type: 'photon', from: 'out1', to: 'b' },
+        { id: 'g3', type: 'photon', from: 'out2', to: 'c' },
+        { id: 'ab', type: 'fermion', from: 'a', to: 'b' },
+        { id: 'bc', type: 'fermion', from: 'b', to: 'c' },
+        { id: 'ca', type: 'fermion', from: 'c', to: 'a' },
+      ],
+    };
+    expect(validate(tri, { loops: 1 }).issues.map((i) => i.code)).toEqual(['FURRY']);
+  });
+});
+
+describe('timeline', () => {
+  it('reads Møller as a story in time', () => {
+    const t = timeline(moller());
+    expect(t.events.map((e) => e.vertex)).toEqual(['vA', 'vB']);
+    expect(t.events[0].ins.map((x) => x.species)).toEqual(['e-']);
+    expect(t.events[0].outs.map((x) => x.species).sort()).toEqual(['e-', 'gamma']);
+  });
+  it('sees a backwards arrow as a positron moving forward', () => {
+    const d = moller();
+    d.edges[0] = { id: 'a', type: 'fermion', from: 'vA', to: 'in1' };
+    const t = timeline(d);
+    expect(t.traversals.find((x) => x.edge.id === 'a')?.species).toBe('e+');
+  });
+});
