@@ -1,0 +1,270 @@
+import type { Level } from '../../game/types';
+import { patchEdges, plain, process } from '../diagrams';
+
+const moller = () => plain(process('moller', 't'));
+const bhabha = () => plain(process('bhabha', 't'));
+const annihilation = () => plain(process('annihilation', 't'));
+
+export const chapter1: Level[] = [
+  {
+    id: 1,
+    chapter: 1,
+    title: 'Tu primer diagrama',
+    mechanic: 'decode',
+    intro:
+      'Richard Feynman inventó un lenguaje visual para describir cómo interactúan las partículas. Cada línea es una partícula y el tiempo avanza de izquierda a derecha. Vamos a aprender sus primeras letras.',
+    steps: [
+      {
+        id: 'electron',
+        kind: 'tap',
+        prompt: 'Las líneas rectas con flecha representan electrones. Toca una.',
+        diagram: moller(),
+        targets: ['in1', 'in2', 'out1', 'out2'],
+        mode: 'any',
+        tappable: 'edges',
+        wrong: { int: 'Esa línea es ondulada: es un fotón. Busca una recta con flecha.' },
+        wrongDefault: 'Busca una línea recta con una flecha en medio.',
+        hints: ['Hay cuatro líneas rectas: dos a la izquierda y dos a la derecha.', 'Cualquier línea recta con flecha vale: todas son electrones.'],
+        solved: '¡Eso es! Recta con flecha: electrón (e⁻).',
+      },
+      {
+        id: 'photon',
+        kind: 'tap',
+        prompt: 'La línea ondulada es un fotón, la partícula de la luz. Tócala.',
+        diagram: moller(),
+        targets: ['int'],
+        mode: 'any',
+        tappable: 'edges',
+        wrongDefault: 'Esa línea es recta: es un electrón. El fotón se dibuja ondulado.',
+        hints: ['Busca la única línea que no es recta.', 'Está en el centro, uniendo los dos puntos donde se encuentran las líneas.'],
+        solved: 'Ondulada: fotón (γ).',
+      },
+      {
+        id: 'time',
+        kind: 'choice',
+        prompt: 'Según la convención que usamos, ¿hacia dónde avanza el tiempo en el diagrama?',
+        diagram: moller(),
+        options: [
+          { id: 'lr', text: 'De izquierda a derecha', correct: true, feedback: 'A la izquierda, lo que entra; a la derecha, lo que sale.' },
+          { id: 'tb', text: 'De arriba abajo', feedback: 'Hay libros que usan esa convención, pero aquí el tiempo siempre fluye de izquierda a derecha (fíjate en el eje de abajo).' },
+          { id: 'none', text: 'Los diagramas no tienen tiempo', feedback: 'Sí tienen una dirección temporal: distingue el estado inicial (izquierda) del final (derecha).' },
+        ],
+        hints: ['Mira la flecha que aparece debajo del diagrama.', 'Las partículas iniciales se dibujan a la izquierda.'],
+      },
+    ],
+    success: '¡Ya lees tus primeras dos «letras»! Recta con flecha: electrón. Ondulada: fotón.',
+    explanation: {
+      intuitive: 'Dos electrones se acercan, intercambian un fotón y se alejan. Así es como dos cargas negativas se repelen.',
+      scientific:
+        'Es un diagrama de dispersión electrón–electrón (dispersión de Møller) de orden árbol. Las cuatro líneas fermiónicas externas son los electrones inicial y final; la línea ondulada interna es un fotón virtual.',
+      math: 'Cada elemento del diagrama aporta un factor a una amplitud de probabilidad 𝓜. Este diagrama tiene dos vértices, así que su contribución es proporcional a e², donde e es la carga elemental.',
+    },
+    concepts: ['electron', 'photon', 'time'],
+  },
+  {
+    id: 2,
+    chapter: 1,
+    title: 'Entrar y salir',
+    mechanic: 'decode',
+    intro: 'Todo diagrama cuenta una historia: unas partículas entran (estado inicial) y otras salen (estado final). Entre medias, interactúan.',
+    steps: [
+      {
+        id: 'initial',
+        kind: 'tap',
+        prompt: 'Toca todas las partículas del estado inicial (las que entran) y pulsa Comprobar.',
+        diagram: moller(),
+        targets: ['in1', 'in2'],
+        mode: 'all',
+        tappable: 'edges',
+        wrong: { int: 'Ese fotón es interno: empieza y acaba dentro del diagrama, ni entra ni sale.' },
+        wrongDefault: 'Esa línea llega al borde derecho: sale del proceso.',
+        hints: ['Las partículas que entran están a la izquierda.', 'Son las dos líneas rectas que tocan el borde izquierdo.'],
+        solved: 'Dos electrones entran.',
+      },
+      {
+        id: 'count',
+        kind: 'choice',
+        prompt: '¿Cuántas partículas hay en el estado final?',
+        diagram: moller(),
+        options: [
+          { id: '1', text: '1' },
+          { id: '2', text: '2', correct: true, feedback: 'Dos electrones salen por la derecha.' },
+          { id: '3', text: '3', feedback: 'El fotón no cuenta: une dos vértices dentro del diagrama, así que no sale.' },
+          { id: '4', text: '4', feedback: 'Cuenta solo las líneas que llegan al borde derecho.' },
+        ],
+        hints: ['Cuenta las líneas que llegan al borde derecho.', 'El fotón central no llega a ningún borde.'],
+      },
+      {
+        id: 'role',
+        kind: 'choice',
+        prompt: 'Entran dos electrones y salen dos electrones. ¿Qué papel tiene el fotón?',
+        diagram: moller(),
+        options: [
+          { id: 'mediator', text: 'Transmite la interacción electromagnética entre ellos', correct: true, feedback: 'El fotón es el mediador de la fuerza electromagnética.' },
+          { id: 'third', text: 'Es un tercer electrón que se crea', feedback: 'Es ondulado: es un fotón, no un electrón.' },
+          { id: 'escape', text: 'Escapa y podríamos detectarlo', feedback: 'Un fotón que une dos vértices es interno (virtual): no llega a ningún detector.' },
+        ],
+        hints: ['El fotón une los dos puntos donde ocurre algo.', 'Piensa en él como el «mensajero» de la fuerza.'],
+      },
+    ],
+    success: 'Ya distingues el principio y el final de una historia cuántica.',
+    explanation: {
+      intuitive: 'Lo que entra está a la izquierda; lo que sale, a la derecha. El fotón central es el «mensajero» de la interacción.',
+      scientific:
+        'Las líneas externas representan partículas reales del estado inicial y final, las que se preparan y se detectan en un experimento. Las líneas internas representan partículas virtuales, que no se observan directamente.',
+      math: 'Para cada estado inicial y final calculamos una amplitud 𝓜. La probabilidad del proceso es proporcional a |𝓜|².',
+    },
+    concepts: ['initial-final'],
+  },
+  {
+    id: 3,
+    chapter: 1,
+    title: 'La flecha hacia atrás',
+    mechanic: 'decode',
+    intro:
+      'Cada partícula tiene una antipartícula con carga opuesta. La del electrón es el positrón (e⁺). Se dibuja con la misma línea recta, pero con la flecha apuntando contra el tiempo.',
+    steps: [
+      {
+        id: 'positron-in',
+        kind: 'tap',
+        prompt: 'Toca el positrón que entra en la interacción.',
+        diagram: bhabha(),
+        targets: ['in2'],
+        mode: 'any',
+        tappable: 'edges',
+        wrong: {
+          in1: 'Esa entra, pero su flecha va a favor del tiempo: es un electrón.',
+          out2: 'Es un positrón, pero está a la derecha: sale. Busca el que entra.',
+          out1: 'Esa línea sale y su flecha va a favor del tiempo: es un electrón.',
+          int: 'Ese es el fotón.',
+        },
+        wrongDefault: 'Busca una línea a la izquierda con la flecha apuntando hacia la izquierda.',
+        hints: ['Mira solo las líneas de la izquierda.', 'La flecha del positrón apunta hacia atrás en el tiempo, es decir, hacia la izquierda.'],
+        solved: 'Flecha contra el tiempo: positrón.',
+      },
+      {
+        id: 'charge',
+        kind: 'choice',
+        prompt: '¿Qué carga eléctrica tiene un positrón?',
+        options: [
+          { id: 'pos', text: '+1, opuesta a la del electrón', correct: true, feedback: 'Misma masa que el electrón, carga opuesta.' },
+          { id: 'neg', text: '−1, como el electrón', feedback: 'Una antipartícula tiene la carga opuesta a su partícula.' },
+          { id: 'zero', text: '0, como el fotón', feedback: 'El positrón tiene carga: por eso puede emitir y absorber fotones.' },
+        ],
+        hints: ['«Anti» significa opuesto.', 'La carga del electrón es −1.'],
+      },
+      {
+        id: 'positron-out',
+        kind: 'tap',
+        prompt: 'Ahora toca el positrón que sale.',
+        diagram: bhabha(),
+        targets: ['out2'],
+        mode: 'any',
+        tappable: 'edges',
+        wrong: { in2: 'Ese es el positrón que entra.', out1: 'Sale, pero con la flecha a favor del tiempo: es un electrón.', int: 'Ese es el fotón.' },
+        wrongDefault: 'Busca a la derecha una flecha que apunte hacia la izquierda.',
+        hints: ['Está a la derecha.', 'Su flecha también apunta hacia la izquierda, contra el tiempo.'],
+      },
+    ],
+    success: 'Has descubierto la antimateria. La misma línea, con la flecha al revés.',
+    explanation: {
+      intuitive: 'Un electrón y un positrón se cruzan y se desvían intercambiando un fotón.',
+      scientific:
+        'Es la dispersión de Bhabha (e⁻e⁺ → e⁻e⁺) en el canal t. La flecha no indica hacia dónde se mueve la partícula, sino el flujo del número fermiónico. Una flecha contra el tiempo representa una antipartícula que avanza hacia el futuro.',
+      math: 'En la amplitud, un electrón entrante aporta un espinor u(p) y un positrón entrante, un espinor v̄(p). El orden sigue siendo e².',
+    },
+    concepts: ['positron'],
+  },
+  {
+    id: 4,
+    chapter: 1,
+    title: 'Pon nombre a cada línea',
+    mechanic: 'decode',
+    intro: 'Ya conoces el electrón, el positrón y el fotón. Con estas tres piezas se escribe toda la electrodinámica cuántica (QED). Lee este diagrama nuevo.',
+    steps: [
+      {
+        id: 'photons',
+        kind: 'tap',
+        prompt: 'Toca todos los fotones del diagrama y pulsa Comprobar.',
+        diagram: annihilation(),
+        targets: ['out1', 'out2'],
+        mode: 'all',
+        tappable: 'edges',
+        wrong: {
+          int: 'Esa línea es recta: es un electrón (virtual), aunque esté dentro del diagrama.',
+          in2: 'Recta con la flecha hacia atrás: es un positrón.',
+          in1: 'Recta con la flecha hacia delante: es un electrón.',
+        },
+        wrongDefault: 'Busca las líneas onduladas.',
+        hints: ['Hay más de un fotón.', 'Los dos fotones están a la derecha.'],
+        solved: 'Dos fotones salen.',
+      },
+      {
+        id: 'process',
+        kind: 'choice',
+        prompt: '¿Qué proceso representa este diagrama?',
+        diagram: annihilation(),
+        options: [
+          { id: 'annihilation', text: 'Un electrón y un positrón se aniquilan y producen dos fotones', correct: true, feedback: 'Materia y antimateria se convierten en luz.' },
+          { id: 'creation', text: 'Dos fotones chocan y crean un electrón y un positrón', feedback: 'Fíjate en el sentido del tiempo: los fotones están a la derecha, así que salen.' },
+          { id: 'emission', text: 'Un electrón emite dos fotones y sigue su camino', feedback: 'La línea de abajo tiene la flecha hacia atrás: es un positrón, no otro electrón.' },
+        ],
+        hints: ['¿Qué entra por la izquierda?', 'Una flecha hacia delante y otra hacia atrás: un electrón y un positrón.'],
+      },
+    ],
+    success: 'Lees diagramas que nunca habías visto. Así se aprende un idioma.',
+    explanation: {
+      intuitive: 'Cuando un electrón se encuentra con un positrón, pueden desaparecer y convertirse en luz: dos fotones.',
+      scientific:
+        'Es la aniquilación de un par electrón–positrón en dos fotones (e⁻e⁺ → γγ). La línea interna es un electrón virtual que une los dos vértices. Se usa, por ejemplo, en la tomografía por emisión de positrones (PET).',
+      math: 'De nuevo hay dos vértices, así que la amplitud es de orden e². Hay otro diagrama con los fotones intercambiados, y se suma a este para obtener la amplitud total.',
+    },
+    concepts: ['annihilation'],
+  },
+  {
+    id: 5,
+    chapter: 1,
+    title: 'No es una fotografía',
+    mechanic: 'debug',
+    intro: 'El lenguaje de Feynman es muy preciso: una etiqueta equivocada cambia el significado. En este diagrama hay un error de notación. ¿Lo encuentras?',
+    steps: [
+      {
+        id: 'label',
+        kind: 'tap',
+        prompt: 'Una etiqueta no coincide con lo que dice el dibujo. Toca la línea mal etiquetada.',
+        diagram: patchEdges(bhabha(), { in2: { labelOverride: 'e⁻' } }),
+        targets: ['in2'],
+        mode: 'any',
+        tappable: 'edges',
+        wrongDefault: 'La etiqueta de esa línea es coherente con su dibujo. Revisa hacia dónde apunta cada flecha.',
+        hints: ['Compara cada flecha con el sentido del tiempo.', 'Una línea con la flecha hacia atrás debería llamarse e⁺.'],
+        solved: 'Flecha hacia atrás en la entrada: es un positrón, no un electrón.',
+      },
+      {
+        id: 'trajectory',
+        kind: 'choice',
+        prompt: 'Una amiga dice: «El electrón de arriba viaja exactamente por ese camino y rebota en el fotón». ¿Qué le responderías?',
+        diagram: bhabha(),
+        options: [
+          {
+            id: 'amplitude',
+            text: 'El diagrama no es una trayectoria: representa una contribución a la probabilidad del proceso',
+            correct: true,
+            feedback: 'Exacto. Las posiciones y los ángulos del dibujo no significan nada: solo importa qué está conectado con qué.',
+          },
+          { id: 'yes', text: 'Tiene razón: las líneas son los caminos reales', feedback: 'Las partículas cuánticas no siguen caminos definidos como pelotas. Si dibujamos el diagrama de otra forma, significa lo mismo.' },
+          { id: 'curved', text: 'Casi: el camino real es curvo', feedback: 'Ni recto ni curvo: el diagrama no describe ningún camino en el espacio.' },
+        ],
+        hints: ['¿Cambiaría la física si dibujásemos las líneas más largas o inclinadas?', 'Un diagrama de Feynman es una pieza de un cálculo de amplitudes de probabilidad.'],
+      },
+    ],
+    success: 'Has encontrado el error y has evitado la confusión más común sobre los diagramas de Feynman.',
+    explanation: {
+      intuitive: 'Un diagrama de Feynman se parece a un mapa de metro: dice qué está conectado con qué, no por dónde pasan exactamente las cosas.',
+      scientific:
+        'Un diagrama de Feynman representa una contribución a la amplitud de probabilidad de un proceso. No es una fotografía de trayectorias: las posiciones de vértices y líneas en el papel no tienen significado físico, solo la topología y los tipos de línea.',
+      math: 'Cada vértice del diagrama se integra sobre todas las posiciones del espacio-tiempo. Por eso el dibujo no fija ninguna trayectoria concreta.',
+    },
+    concepts: ['not-trajectory'],
+  },
+];
