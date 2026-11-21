@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { content } from '../../content';
 import { useGame } from '../../game/store';
-import { BottomNav } from '../components/BottomNav';
 
 export function Settings() {
   const { settings, setSetting, reset, metrics, progress, xp, mastery } = useGame();
@@ -92,7 +91,6 @@ export function Settings() {
           Un diagrama de Feynman representa una contribución a una amplitud de probabilidad, no una fotografía de trayectorias. Las soluciones las comprueba un validador determinista.
         </p>
       </section>
-      <BottomNav active="settings" />
     </div>
   );
 }

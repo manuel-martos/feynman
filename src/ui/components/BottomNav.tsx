@@ -10,8 +10,10 @@ const ITEMS: { route: Route; label: string; icon: string }[] = [
 
 export function BottomNav({ active }: { active: Route['name'] }) {
   const newConcepts = useGame((s) => s.concepts.filter((c) => !s.seenConcepts.includes(c)).length);
+  const index = ITEMS.findIndex((it) => it.route.name === active);
   return (
-    <nav className="bottom-nav" aria-label="Navegación principal">
+    <nav className="bottom-nav" aria-label="Navegación principal" style={{ ['--i' as string]: index }}>
+      <span className="nav-pill" aria-hidden />
       {ITEMS.map((it) => (
         <a key={it.label} href={href(it.route)} className={active === it.route.name ? 'is-active' : ''} aria-current={active === it.route.name ? 'page' : undefined}>
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>

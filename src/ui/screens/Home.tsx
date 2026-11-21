@@ -2,7 +2,6 @@ import { content } from '../../content';
 import { plain, process } from '../../content/diagrams';
 import { rankFor } from '../../game/scoring';
 import { isLevelUnlocked, mathUnlocked, totalStars, useGame } from '../../game/store';
-import { BottomNav } from '../components/BottomNav';
 import { Logo } from '../components/Logo';
 import { MechanicBadge } from '../components/MechanicBadge';
 import { DiagramView } from '../diagram/DiagramView';
@@ -105,7 +104,6 @@ export function Home() {
         <span aria-hidden>{mathUnlocked(progress) ? '→' : '🔒'}</span>
       </button>
 
-      <BottomNav active="home" />
     </div>
   );
 }
