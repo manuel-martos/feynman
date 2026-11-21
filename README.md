@@ -44,7 +44,33 @@ src/
 - Los **bucles** se permiten nivel a nivel (`loops`). El validador aplica también el **teorema de Furry**: un bucle de electrones con un número impar de fotones se anula.
 - **Localización**: los textos de interfaz y contenido viven en `src/content/<locale>/`. Para añadir un idioma basta con crear una carpeta y registrarla en `src/content/index.ts`.
 
-**Decisión técnica:** la propuesta sugería Kotlin + Compose. Para el MVP se eligió una PWA (React + TypeScript + Vite) para validar cuanto antes y en cualquier dispositivo. El motor es TypeScript puro y está separado de la UI, así que es portable a una app nativa si los datos de las pruebas lo justifican.
+**Decisión técnica:** la propuesta sugería Kotlin + Compose. Para el MVP se eligió una PWA (React + TypeScript + Vite) para validar cuanto antes y en cualquier dispositivo. El motor es TypeScript puro y está separado de la UI, y ya existe un port nativo (ver [App Android nativa](#app-android-nativa)).
+
+## App Android nativa
+
+`android/` contiene la versión 100 % nativa, con el mismo diseño y contenido que la PWA:
+
+```
+shared/            fuente única exportada desde TypeScript (npm run export:shared)
+  content/es.json  niveles, conceptos, puntuación y arte
+  engine-cases.json  casos dorados del motor TS (validador, topología, línea temporal, narración, enumeradores)
+android/
+  core/   Kotlin/JVM puro — port del Diagram Engine y del Game Engine, verificado contra los casos dorados
+  app/    Jetpack Compose — Material 3 Expressive, Navigation 3, Hilt, ViewModels + StateFlow, DataStore
+```
+
+- **Paridad comprobada**: `:core:test` ejecuta el motor Kotlin sobre cientos de diagramas (todos los del contenido, enumeraciones, mutaciones aleatorias) y exige el mismo resultado que el motor TypeScript.
+- **Contenido único**: la app empaqueta `shared/content/es.json` como asset; CI falla si `shared/` no está sincronizado con `src/`.
+- Diagramas dibujados en `Canvas` (brillo, flujo, reproducción temporal con cargas), editor táctil, sonido sintetizado con `AudioTrack`, háptica, y movimiento reducido según el ajuste de la app o del sistema.
+
+```bash
+npm run export:shared                  # tras cambiar contenido o motor en src/
+cd android
+./gradlew :core:test :app:testDebugUnitTest   # paridad, lógica y UI (Robolectric + Roborazzi)
+./gradlew :app:installDebug            # instalar en el dispositivo conectado
+```
+
+CI compila el APK de depuración y lo publica como artefacto (`feynman-quest-debug-apk`).
 
 ## Desarrollo
 
