@@ -102,6 +102,7 @@ fun SettingsScreen(content: Content, state: GameState, vm: AppViewModel) {
 private fun Toggle(label: String, desc: String, checked: Boolean, onChange: (Boolean) -> Unit) {
   Row(
     Modifier.fillMaxWidth().toggleable(checked, role = Role.Switch, onValueChange = onChange).padding(horizontal = 14.dp, vertical = 12.dp),
+    horizontalArrangement = Arrangement.spacedBy(12.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Column(Modifier.weight(1f)) {

@@ -43,12 +43,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
@@ -60,7 +63,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.sp
 import dev.mmartos.feynmanquest.core.content.Explanation
 import dev.mmartos.feynmanquest.core.content.Mechanic
@@ -91,6 +96,16 @@ fun CosmicBackground(modifier: Modifier = Modifier, content: @Composable BoxScop
       },
     content = content,
   )
+}
+
+/**
+ * Lets a full-width child extend [gutter] past its parent's horizontal padding on both sides, e.g. a
+ * horizontally scrolling row that should run to the screen edge instead of being cut at the gutter.
+ */
+fun Modifier.bleedHorizontally(gutter: Dp): Modifier = layout { measurable, constraints ->
+  val px = gutter.roundToPx()
+  val placeable = measurable.measure(constraints.offset(horizontal = 2 * px))
+  layout(placeable.width - 2 * px, placeable.height) { placeable.place(-px, 0) }
 }
 
 /** Press feedback: a small spring scale, like `.btn:active { scale(.97) }`. */
@@ -125,18 +140,19 @@ fun AppButton(
     ButtonStyle.Danger -> Triple(Brush.linearGradient(listOf(Cosmic.Danger.copy(alpha = 0.18f), Cosmic.Danger.copy(alpha = 0.18f))), Color(0xFFFFB3BA), Cosmic.Danger.copy(alpha = 0.5f))
     ButtonStyle.DangerGhost -> Triple(null, Color(0xFFFFB3BA), Cosmic.Danger.copy(alpha = 0.5f))
   }
-  val glow = when (style) { ButtonStyle.Primary -> Cosmic.Accent; ButtonStyle.Success -> Cosmic.Success; else -> null }
+  // Soft coloured glow under filled buttons, mirroring the web's box-shadow. A blurred drop shadow
+  // fades out on its own, so it never shows a hard edge the way a gradient in a fixed rect did.
+  val glow = when (style) {
+    ButtonStyle.Primary -> Shadow(radius = 40.dp, color = Cosmic.Accent.copy(alpha = 0.55f), spread = (-10).dp, offset = DpOffset(0.dp, 12.dp))
+    ButtonStyle.Success -> Shadow(radius = 30.dp, color = Cosmic.Success.copy(alpha = 0.6f), spread = (-10).dp, offset = DpOffset(0.dp, 12.dp))
+    else -> null
+  }
   Row(
     modifier
       .pressScale(source)
       .graphicsLayer { alpha = if (enabled) 1f else 0.45f }
       .heightIn(min = if (large) 56.dp else 48.dp)
-      .then(if (glow != null && enabled) Modifier.drawBehind {
-        drawRoundRect(
-          Brush.radialGradient(listOf(glow.copy(alpha = 0.45f), Color.Transparent), center = Offset(size.width / 2, size.height * 0.9f), radius = size.width * 0.55f),
-          topLeft = Offset(-12f, size.height * 0.2f), size = androidx.compose.ui.geometry.Size(size.width + 24f, size.height),
-        )
-      } else Modifier)
+      .then(if (glow != null && enabled) Modifier.dropShadow(shape, glow) else Modifier)
       .clip(shape)
       .then(if (bg != null) Modifier.background(bg) else Modifier)
       .then(if (border != null) Modifier.border(1.dp, border, shape) else if (style == ButtonStyle.Primary) Modifier.border(1.dp, Color.White.copy(alpha = 0.18f), shape) else Modifier)
@@ -144,7 +160,7 @@ fun AppButton(
         sound?.let(fb::sfx)
         onClick()
       }
-      .padding(horizontal = 20.dp),
+      .padding(horizontal = 20.dp, vertical = 10.dp),
     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
     verticalAlignment = Alignment.CenterVertically,
   ) {

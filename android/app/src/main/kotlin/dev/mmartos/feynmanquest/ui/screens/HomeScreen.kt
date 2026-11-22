@@ -27,7 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.mmartos.feynmanquest.core.content.Content
@@ -130,7 +132,9 @@ fun HomeScreen(content: Content, state: GameState, nav: Navigator) {
     Column(
       Modifier
         .fillMaxWidth()
-        .shadow(28.dp, heroShape, ambientColor = chColor, spotColor = chColor)
+        // Blurred and offset like the web's box-shadow. An elevation shadow here would show its
+        // hard-edged core through the card's translucent background.
+        .dropShadow(heroShape, Shadow(radius = 60.dp, color = chColor.copy(alpha = 0.6f), spread = (-30).dp, offset = DpOffset(0.dp, 30.dp)))
         .clip(heroShape)
         .background(Brush.verticalGradient(listOf(Color(0xE6151D4A), Color(0xE60C1130))))
         .drawBehind {
