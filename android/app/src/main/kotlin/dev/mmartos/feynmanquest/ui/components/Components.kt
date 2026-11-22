@@ -292,23 +292,24 @@ fun ExplanationTabs(ex: Explanation, mathUnlocked: Boolean, onView: (Layer) -> U
       Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.Black.copy(alpha = 0.25f)).padding(4.dp),
       horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-      TABS.forEach { t ->
-        val locked = t.layer == Layer.Math && !mathUnlocked
+      // The math layer stays hidden until it's unlocked (level 5), rather than shown as a dead tab.
+      TABS.filter { it.layer != Layer.Math || mathUnlocked }.forEach { t ->
         val active = tab == t.layer
         Box(
           Modifier
             .weight(1f)
             .clip(RoundedCornerShape(10.dp))
             .background(if (active) Cosmic.Accent.copy(alpha = 0.32f) else Color.Transparent)
-            .clickable(enabled = !locked, role = Role.Tab) { tab = t.layer; onView(t.layer); fb.sfx(Sfx.Tap) }
+            .clickable(role = Role.Tab) { tab = t.layer; onView(t.layer); fb.sfx(Sfx.Tap) }
             .semantics { selected = active }
             .padding(vertical = 9.dp),
           contentAlignment = Alignment.Center,
         ) {
           Text(
-            (if (locked) "🔒 " else "") + t.label,
-            color = if (active) Cosmic.Text else if (locked) Cosmic.Text3 else Cosmic.Text2,
+            t.label,
+            color = if (active) Cosmic.Text else Cosmic.Text2,
             style = MaterialTheme.typography.labelMedium,
+            maxLines = 1,
           )
         }
       }

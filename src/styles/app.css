@@ -1285,10 +1285,6 @@ p {
   color: var(--text);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
-.tab.is-locked {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 .tab-panel {
   padding: 6px 2px 0;
   animation: screen-in 0.3s var(--ease-out);

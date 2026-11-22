@@ -15,27 +15,22 @@ export function Explanation({ ex, mathUnlocked, onView }: { ex: Ex; mathUnlocked
   return (
     <div className="explanation">
       <div className="tabs" role="tablist" aria-label="Profundidad de la explicación">
-        {TABS.map((t) => {
-          const locked = t.id === 'math' && !mathUnlocked;
-          return (
-            <button
-              key={t.id}
-              role="tab"
-              aria-selected={tab === t.id}
-              className={`tab ${tab === t.id ? 'is-active' : ''} ${locked ? 'is-locked' : ''}`}
-              disabled={locked}
-              title={locked ? 'Se desbloquea al completar el capítulo 1' : undefined}
-              onClick={() => {
-                setTab(t.id);
-                onView?.(t.id);
-                sfx('tap');
-              }}
-            >
-              {locked && <span aria-hidden>🔒 </span>}
-              {t.label}
-            </button>
-          );
-        })}
+        {/* The math layer stays hidden until it's unlocked (level 5), rather than shown as a dead tab. */}
+        {TABS.filter((t) => t.id !== 'math' || mathUnlocked).map((t) => (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
+            className={`tab ${tab === t.id ? 'is-active' : ''}`}
+            onClick={() => {
+              setTab(t.id);
+              onView?.(t.id);
+              sfx('tap');
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
       <div className="tab-panel" role="tabpanel" key={tab}>
         <p className="tab-q">{current.q}</p>
