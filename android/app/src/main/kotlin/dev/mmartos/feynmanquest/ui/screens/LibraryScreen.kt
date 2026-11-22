@@ -43,6 +43,7 @@ import dev.mmartos.feynmanquest.core.content.ConceptKind
 import dev.mmartos.feynmanquest.core.content.Content
 import dev.mmartos.feynmanquest.core.game.GameState
 import dev.mmartos.feynmanquest.ui.components.Chip
+import dev.mmartos.feynmanquest.ui.components.bleedHorizontally
 import dev.mmartos.feynmanquest.ui.components.Eyebrow
 import dev.mmartos.feynmanquest.ui.components.ProgressBar
 import dev.mmartos.feynmanquest.ui.diagram.DiagramPlayback
@@ -75,7 +76,8 @@ fun LibraryScreen(content: Content, state: GameState, onSeen: () -> Unit) {
       Text("${state.concepts.size} de ${content.concepts.size} descubrimientos", color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
       ProgressBar(state.concepts.size / content.concepts.size.toFloat(), Modifier.fillMaxWidth().padding(top = 4.dp))
     }
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // Scroll edge to edge, so chips aren't cut off at the page gutter, while still starting aligned with it.
+    Row(Modifier.bleedHorizontally(16.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       FILTERS.forEach { (k, label) -> Chip(label, filter == k) { filter = k } }
     }
     list.chunked(2).forEach { row ->
