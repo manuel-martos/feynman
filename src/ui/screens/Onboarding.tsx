@@ -5,6 +5,7 @@ import { sfx } from '../audio';
 import { Logo } from '../components/Logo';
 import { DiagramView } from '../diagram/DiagramView';
 import { navigate } from '../router';
+import { t } from '../../i18n';
 
 const moller = plain(process('moller', 't'));
 
@@ -27,10 +28,8 @@ const LegendLine = ({ kind, label, desc }: { kind: 'electron' | 'positron' | 'ph
   </li>
 );
 
-const SLIDES = [
+const ART = [
   {
-    title: 'El universo tiene un idioma',
-    body: 'Richard Feynman inventó una forma de dibujar cómo interactúan las partículas. Con estos dibujos los físicos calculan desde el color del cielo hasta lo que ocurre en el CERN.',
     art: () => (
       <div className="onb-art">
         <DiagramView diagram={moller} showLabels={false} />
@@ -38,25 +37,20 @@ const SLIDES = [
     ),
   },
   {
-    title: 'Tres letras para empezar',
-    body: 'Cada línea es una partícula. El tiempo avanza de izquierda a derecha.',
     art: () => (
       <ul className="legend-list">
-        <LegendLine kind="electron" label="Electrón e⁻" desc="Recta, flecha a favor del tiempo" />
-        <LegendLine kind="positron" label="Positrón e⁺" desc="Recta, flecha contra el tiempo" />
-        <LegendLine kind="photon" label="Fotón γ" desc="Ondulada: la partícula de la luz" />
+        <LegendLine kind="electron" {...t.onboarding.electron} />
+        <LegendLine kind="positron" {...t.onboarding.positron} />
+        <LegendLine kind="photon" {...t.onboarding.photon} />
       </ul>
     ),
   },
   {
-    title: 'Aprende haciendo',
-    body: 'Descifra diagramas, constrúyelos con tus manos y caza errores. Cada reto dura entre 2 y 5 minutos, y la física te explica por qué tu solución funciona.',
     art: () => (
       <ol className="loop-list">
-        <li><b>1</b> Observa</li>
-        <li><b>2</b> Experimenta</li>
-        <li><b>3</b> Comprende</li>
-        <li><b>4</b> Progresa</li>
+        {t.onboarding.loop.map((s, k) => (
+          <li key={s}><b>{k + 1}</b> {s}</li>
+        ))}
       </ol>
     ),
   },
@@ -65,8 +59,8 @@ const SLIDES = [
 export function Onboarding() {
   const [i, setI] = useState(0);
   const finish = useGame((s) => s.finishOnboarding);
-  const slide = SLIDES[i];
-  const last = i === SLIDES.length - 1;
+  const slide = { ...t.onboarding.slides[i], ...ART[i] };
+  const last = i === ART.length - 1;
 
   const done = () => {
     finish();
@@ -79,7 +73,7 @@ export function Onboarding() {
       <div className="onb-top">
         <Logo size={36} />
         <button className="link" onClick={() => (finish(), navigate({ name: 'home' }))}>
-          Saltar
+          {t.onboarding.skip}
         </button>
       </div>
       <div className="onb-slide" key={i}>
@@ -88,13 +82,13 @@ export function Onboarding() {
         <p>{slide.body}</p>
       </div>
       <div className="onb-dots" aria-hidden>
-        {SLIDES.map((_, k) => (
+        {ART.map((_, k) => (
           <i key={k} className={k === i ? 'on' : ''} />
         ))}
       </div>
       <div className="sticky-actions">
         <button className="btn primary block lg" onClick={() => (last ? done() : (setI(i + 1), sfx('tap')))} autoFocus>
-          {last ? 'Empezar el nivel 1' : 'Siguiente'}
+          {last ? t.onboarding.startLevel1 : t.onboarding.next}
         </button>
       </div>
     </div>

@@ -8,6 +8,7 @@ import androidx.datastore.core.Serializer
 import androidx.datastore.dataStoreFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.mmartos.feynmanquest.core.content.Content
+import dev.mmartos.feynmanquest.core.content.Language
 import dev.mmartos.feynmanquest.core.game.GameState
 import dev.mmartos.feynmanquest.core.game.Layer
 import dev.mmartos.feynmanquest.core.game.LevelResult
@@ -53,7 +54,8 @@ class GameRepository internal constructor(
 ) {
   @Inject constructor(@ApplicationContext context: Context, contentRepository: ContentRepository) : this(
     DataStoreFactory.create(GameStateSerializer, produceFile = { context.dataStoreFile("game.json") }),
-    contentRepository.content,
+    // Progress only uses ids, XP and concepts, which are the same in every language.
+    contentRepository.content(Language.Es),
     CoroutineScope(SupervisorJob() + Dispatchers.IO),
   )
 

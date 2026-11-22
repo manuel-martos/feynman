@@ -1,6 +1,8 @@
 package dev.mmartos.feynmanquest.ui.navigation
 
+import androidx.annotation.StringRes
 import androidx.navigation3.runtime.NavKey
+import dev.mmartos.feynmanquest.R
 import kotlinx.serialization.Serializable
 
 @Serializable data object OnboardingRoute : NavKey
@@ -11,7 +13,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class LevelRoute(val id: Int) : NavKey
 @Serializable data object PracticeRoute : NavKey
 
-enum class Tab(val label: String) { Home("Inicio"), Map("Campaña"), Library("Colección"), Settings("Ajustes") }
+enum class Tab(@StringRes val label: Int) { Home(R.string.nav_home), Map(R.string.nav_map), Library(R.string.nav_library), Settings(R.string.nav_settings) }
 
 val NavKey.tab: Tab?
   get() = when (this) {

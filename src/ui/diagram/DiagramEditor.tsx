@@ -3,6 +3,7 @@ import { degree, isExternal, newId, nodeMap, type Diagram, type DiagramEdge, typ
 import { sfx } from '../audio';
 import { DiagramView, VIEW_H, VIEW_W } from './DiagramView';
 import { arrowHead, controlPoint, quadAt, straightOrCurvedPath, wavyPath, type Pt } from './geometry';
+import { t } from '../../i18n';
 
 export interface DiagramEditorProps {
   diagram: Diagram;
@@ -102,14 +103,14 @@ export function DiagramEditor({ diagram, onChange, palette, errors, success, dis
       const b = nodes.get(to)!;
       if (isExternal(a) && isExternal(b)) {
         sfx('deny');
-        onNotice?.('Cada partícula externa debe llegar a un vértice: ahí es donde ocurre la interacción.');
+        onNotice?.(t.editor.externalToExternal);
         return;
       }
       if (from === to) return;
       const parallel = diagram.edges.filter((e) => (e.from === from && e.to === to) || (e.from === to && e.to === from));
       if (parallel.length && (!allowParallel || parallel.length >= 2 || isExternal(a) || isExternal(b))) {
         sfx('deny');
-        onNotice?.('Ya hay una línea entre esos dos puntos.');
+        onNotice?.(t.editor.parallel);
         return;
       }
       for (const id of [from, to]) {
@@ -117,8 +118,8 @@ export function DiagramEditor({ diagram, onChange, palette, errors, success, dis
           sfx('deny');
           onNotice?.(
             nodes.get(id)!.kind === 'vertex'
-              ? 'Un vértice QED une exactamente tres líneas. Borra una para cambiarla.'
-              : 'Cada partícula externa tiene una sola línea.',
+              ? t.editor.vertexFull
+              : t.editor.externalFull,
           );
           return;
         }
@@ -176,7 +177,7 @@ export function DiagramEditor({ diagram, onChange, palette, errors, success, dis
     const hitEdge = edgeAt(p);
     if (hitEdge) {
       if (hitEdge.locked !== false) {
-        onNotice?.('Esta línea forma parte del enunciado y no se puede cambiar.');
+        onNotice?.(t.editor.locked);
         sfx('deny');
         return;
       }
@@ -268,7 +269,7 @@ export function DiagramEditor({ diagram, onChange, palette, errors, success, dis
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={() => (setDrag(null), setSnap(null))}
-          ariaLabel="Editor de diagrama: arrastra desde un punto a otro para trazar una línea"
+          ariaLabel={t.editor.label}
           overlay={
             ghostFrom && ghostTo && drag?.moved ? (
               <g>
@@ -289,11 +290,11 @@ export function DiagramEditor({ diagram, onChange, palette, errors, success, dis
           >
             {menuEdge.type === 'fermion' && (
               <button role="menuitem" onClick={() => editEdge('flip')}>
-                <span aria-hidden>⇄</span> Invertir flecha
+                <span aria-hidden>⇄</span> {t.editor.flip}
               </button>
             )}
             <button role="menuitem" className="danger" onClick={() => editEdge('delete')}>
-              <span aria-hidden>✕</span> Borrar
+              <span aria-hidden>✕</span> {t.editor.remove}
             </button>
           </div>
         )}
@@ -303,18 +304,18 @@ export function DiagramEditor({ diagram, onChange, palette, errors, success, dis
       <KeyboardConnect diagram={diagram} onConnect={connect} disabled={disabled} />
 
       <div className="editor-toolbar">
-        <div className="palette" role="radiogroup" aria-label="Tipo de línea">
-          {palette.map((t) => (
+        <div className="palette" role="radiogroup" aria-label={t.editor.lineType}>
+          {palette.map((kind) => (
             <button
-              key={t}
+              key={kind}
               role="radio"
-              aria-checked={tool === t}
-              className={`piece ${t} ${tool === t ? 'is-active' : ''}`}
-              onClick={() => (setTool(t), sfx('tap'))}
+              aria-checked={tool === kind}
+              className={`piece ${kind} ${tool === kind ? 'is-active' : ''}`}
+              onClick={() => (setTool(kind), sfx('tap'))}
               disabled={disabled}
             >
               <svg viewBox="0 0 40 14" aria-hidden>
-                {t === 'photon' ? (
+                {kind === 'photon' ? (
                   <path d={wavyPath({ x: 3, y: 7 }, { x: 37, y: 7 }, 0, 3, 6.5)} />
                 ) : (
                   <>
@@ -323,25 +324,25 @@ export function DiagramEditor({ diagram, onChange, palette, errors, success, dis
                   </>
                 )}
               </svg>
-              <span>{t === 'photon' ? 'Fotón' : 'Electrón / positrón'}</span>
+              <span>{kind === 'photon' ? t.editor.photon : t.editor.fermion}</span>
             </button>
           ))}
         </div>
         <div className="editor-actions">
-          <button className="icon-btn" onClick={undo} disabled={!history.length || disabled} aria-label="Deshacer" title="Deshacer">
+          <button className="icon-btn" onClick={undo} disabled={!history.length || disabled} aria-label={t.editor.undo} title={t.editor.undo}>
             <svg viewBox="0 0 24 24" aria-hidden><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></svg>
           </button>
-          <button className="icon-btn" onClick={reset} disabled={disabled} aria-label="Reiniciar diagrama" title="Reiniciar">
+          <button className="icon-btn" onClick={reset} disabled={disabled} aria-label={t.editor.resetDiagram} title={t.editor.reset}>
             <svg viewBox="0 0 24 24" aria-hidden><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
           </button>
         </div>
       </div>
       <p className="editor-help">
         {pending
-          ? 'Ahora toca el punto de destino.'
+          ? t.editor.pickTarget
           : tool === 'fermion'
-            ? 'Arrastra entre dos puntos. La flecha sigue el sentido de tu gesto.'
-            : 'Arrastra entre dos puntos para trazar un fotón.'}
+            ? t.editor.fermionHelp
+            : t.editor.photonHelp}
       </p>
     </div>
   );
@@ -361,13 +362,13 @@ function KeyboardConnect({
   const name = (id: string) => {
     const n = diagram.nodes.find((x) => x.id === id)!;
     const same = diagram.nodes.filter((x) => x.kind === n.kind);
-    const base = n.kind === 'vertex' ? 'Vértice' : n.kind === 'in' ? 'Entrada' : 'Salida';
+    const base = n.kind === 'vertex' ? t.editor.vertex : n.kind === 'in' ? t.editor.input : t.editor.output;
     return `${base} ${n.tag ?? same.indexOf(n) + 1}`;
   };
   return (
     <div className="sr-only-focusable kb-connect">
       <label>
-        Desde{' '}
+        {t.editor.from}{' '}
         <select value={from} onChange={(e) => setFrom(e.target.value)} disabled={disabled}>
           <option value="">—</option>
           {diagram.nodes.map((n) => (
@@ -378,7 +379,7 @@ function KeyboardConnect({
         </select>
       </label>
       <label>
-        Hasta{' '}
+        {t.editor.to}{' '}
         <select value={to} onChange={(e) => setTo(e.target.value)} disabled={disabled}>
           <option value="">—</option>
           {diagram.nodes.map((n) => (
@@ -389,7 +390,7 @@ function KeyboardConnect({
         </select>
       </label>
       <button disabled={!from || !to || from === to || disabled} onClick={() => onConnect(from, to)}>
-        Trazar línea
+        {t.editor.draw}
       </button>
     </div>
   );

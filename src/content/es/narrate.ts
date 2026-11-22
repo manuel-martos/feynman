@@ -1,35 +1,19 @@
 import type { Timeline, Traversal } from '../../engine';
-
-export interface Caption {
-  title: string;
-  text: string;
-  /** Charge balance at a vertex, e.g. "−1 → −1 + 0". */
-  charge?: string;
-}
+import { cap, counts, list as listWith, sum, sup, type Caption } from '../narrate';
 
 const NAME: Record<string, string> = { 'e-': 'electrón', 'e+': 'positrón', gamma: 'fotón' };
-const CHARGE: Record<string, number> = { 'e-': -1, 'e+': 1, gamma: 0 };
 
 const name = (t: Traversal) => `un ${NAME[t.species]}${t.virtual ? ' virtual' : ''}`;
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-const list = (xs: string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}`);
-const num = (q: number) => (q < 0 ? `−${-q}` : q > 0 ? `+${q}` : '0');
-const sum = (ts: Traversal[]) => {
-  if (!ts.length) return '0';
-  const qs = ts.map((t) => CHARGE[t.species]);
-  return [num(qs[0]), ...qs.slice(1).map((q) => (q < 0 ? `− ${-q}` : `+ ${q}`))].join(' ');
-};
+const list = (xs: string[]) => listWith(xs, 'y');
 
 function summary(ts: Traversal[]) {
-  const counts = new Map<string, number>();
-  for (const t of ts) counts.set(t.species, (counts.get(t.species) ?? 0) + 1);
   const word = (s: string, n: number) => {
     const base = NAME[s];
     if (n === 1) return `un ${base}`;
     const plural = base.endsWith('n') ? base.replace(/ón$/, 'ones') : `${base}s`;
     return `${n === 2 ? 'dos' : n === 3 ? 'tres' : n} ${plural}`;
   };
-  return list([...counts].map(([s, n]) => word(s, n)));
+  return list(counts(ts).map(([s, n]) => word(s, n)));
 }
 
 /** Plain-language description of one moment of a diagram read in time. */
@@ -69,11 +53,4 @@ export function narrate(tl: Timeline, step: number): Caption {
   } else if (fIn.length === 2) text = `${cap(name(fIn[0]))} y ${name(fIn[1])} se aniquilan en ${name(gOut[0])}.`;
   else text = `${cap(name(gIn[0]))} se convierte en un par: ${name(fOut[0])} y ${name(fOut[1])}.`;
   return { title: `Vértice ${step}`, text, charge: `${sum(ev.ins)} → ${sum(ev.outs)}` };
-}
-
-function sup(n: number) {
-  return String(n)
-    .split('')
-    .map((d) => '⁰¹²³⁴⁵⁶⁷⁸⁹'[Number(d)])
-    .join('');
 }

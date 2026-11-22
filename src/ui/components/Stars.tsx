@@ -1,3 +1,4 @@
+import { t } from '../../i18n';
 export function Star({ filled, size = 20, delay = 0, animate = false }: { filled: boolean; size?: number; delay?: number; animate?: boolean }) {
   return (
     <svg
@@ -15,7 +16,7 @@ export function Star({ filled, size = 20, delay = 0, animate = false }: { filled
 
 export function Stars({ value, size = 16, animate = false }: { value: number; size?: number; animate?: boolean }) {
   return (
-    <span className="stars" role="img" aria-label={`${value} de 3 estrellas`}>
+    <span className="stars" role="img" aria-label={t.stars(value)}>
       {[0, 1, 2].map((i) => (
         <Star key={i} filled={i < value} size={size} animate={animate} delay={animate ? 350 + i * 260 : 0} />
       ))}

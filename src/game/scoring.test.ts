@@ -15,7 +15,7 @@ describe('scoring', () => {
     expect(xpGain(3, 1)).toBe(0);
   });
   it('max campaign xp reaches the top rank', () => {
-    expect(rankFor(24 * 125).rank.title).toBe('Discípulo de Feynman');
+    expect(rankFor(24 * 125).rank.id).toBe('disciple');
     expect(rankFor(0).next?.minXp).toBe(300);
   });
 });

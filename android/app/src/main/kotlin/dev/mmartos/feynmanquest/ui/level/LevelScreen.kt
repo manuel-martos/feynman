@@ -1,5 +1,6 @@
 package dev.mmartos.feynmanquest.ui.level
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -50,6 +51,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.heading
@@ -62,10 +65,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.content.Content
 import dev.mmartos.feynmanquest.core.content.firstDiagram
 import dev.mmartos.feynmanquest.core.game.GameState
 import dev.mmartos.feynmanquest.core.game.Layer
+import dev.mmartos.feynmanquest.ui.LocalLanguage
 import dev.mmartos.feynmanquest.ui.Navigator
 import dev.mmartos.feynmanquest.ui.components.AppButton
 import dev.mmartos.feynmanquest.ui.components.ButtonStyle
@@ -91,12 +96,14 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun LevelScreen(id: Int, game: GameState, nav: Navigator, onLayer: (Int, Layer) -> Unit) {
-  val vm = hiltViewModel<LevelViewModel, LevelViewModel.Factory>(key = "level-$id", creationCallback = { it.create(id) })
+  val language = LocalLanguage.current
+  // Keyed by language too, so a language change never keeps showing a level in the old one.
+  val vm = hiltViewModel<LevelViewModel, LevelViewModel.Factory>(key = "level-$id-${language.id}", creationCallback = { it.create(id, language) })
   val ui by vm.state.collectAsStateWithLifecycle()
   val s = ui
   when {
-    s == null -> Centered("Nivel no encontrado.", "Campaña") { nav.map() }
-    !game.isUnlocked(id) && s.phase == Phase.Intro -> Centered("Este nivel aún está bloqueado.", "Volver a la campaña") { nav.map() }
+    s == null -> Centered(stringResource(R.string.level_not_found), stringResource(R.string.level_campaign)) { nav.map() }
+    !game.isUnlocked(id) && s.phase == Phase.Intro -> Centered(stringResource(R.string.level_locked), stringResource(R.string.level_back_to_campaign)) { nav.map() }
     else -> AnimatedContent(s.phase, transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(150)) }, label = "phase") { phase ->
       when (phase) {
         Phase.Intro -> LevelIntro(s, game, onBack = { nav.map(s.level.chapter) }, onBegin = vm::begin)
@@ -147,12 +154,12 @@ private fun LevelIntro(s: LevelUiState, game: GameState, onBack: () -> Unit, onB
   LevelFrame(
     top = {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        IconSquare(onBack, "Volver") { LineIcon(Icons24.Back) }
-        Text("Capítulo ${s.chapter.id} · Nivel ${s.level.id}", Modifier.weight(1f), color = Cosmic.Text2, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+        IconSquare(onBack, stringResource(R.string.level_back)) { LineIcon(Icons24.Back) }
+        Text(stringResource(R.string.level_where, s.chapter.id, s.level.id), Modifier.weight(1f), color = Cosmic.Text2, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
         Spacer(Modifier.size(44.dp))
       }
     },
-    bottom = { AppButton(if (prevBest > 0) "Jugar de nuevo" else "Empezar", onBegin, Modifier.fillMaxWidth(), ButtonStyle.Primary, large = true) },
+    bottom = { AppButton(stringResource(if (prevBest > 0) R.string.level_play_again else R.string.level_start), onBegin, Modifier.fillMaxWidth(), ButtonStyle.Primary, large = true) },
   ) {
     preview?.let {
       val shape = RoundedCornerShape(32.dp)
@@ -167,7 +174,7 @@ private fun LevelIntro(s: LevelUiState, game: GameState, onBack: () -> Unit, onB
     Text(s.level.title, style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
     Text(s.level.intro, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, lineHeight = 27.sp), color = Cosmic.Text2)
     if (prevBest > 0) Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-      Text("Mejor resultado:", color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
+      Text(stringResource(R.string.level_best), color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
       Stars(prevBest)
     }
   }
@@ -182,10 +189,10 @@ private fun LevelPlay(s: LevelUiState, vm: LevelViewModel, onExit: () -> Unit) {
       scrollKey = step.id,
       top = {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-          IconSquare(onExit, "Salir del nivel") { LineIcon(Icons24.Close) }
+          IconSquare(onExit, stringResource(R.string.level_exit)) { LineIcon(Icons24.Close) }
           StepProgress(s.level.steps.size, s.stepIdx, s.solved, Modifier.weight(1f))
           Box {
-            IconSquare({ vm.revealHint() }, "Pista", enabled = !s.solved, tint = Cosmic.Photon) { LineIcon(Icons24.Bulb) }
+            IconSquare({ vm.revealHint() }, stringResource(R.string.level_hint), enabled = !s.solved, tint = Cosmic.Photon) { LineIcon(Icons24.Bulb) }
             if (s.hintTier > 0) Text(
               "${s.hintTier}", Modifier.align(Alignment.TopEnd).padding(top = 0.dp).size(18.dp).clip(CircleShape).background(Cosmic.Photon),
               color = Cosmic.Bg0, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center,
@@ -215,9 +222,9 @@ private fun LevelPlay(s: LevelUiState, vm: LevelViewModel, onExit: () -> Unit) {
       enter = slideInVertically(tween(380)) { it } + fadeIn(), exit = slideOutVertically { it } + fadeOut(),
     ) {
       SolvedSheet(
-        title = if (s.isLast) "¡Nivel superado!" else "¡Correcto!",
+        title = stringResource(if (s.isLast) R.string.level_passed else R.string.level_correct),
         text = step.solved,
-        action = if (s.isLast) "Ver resultado" else "Continuar",
+        action = stringResource(if (s.isLast) R.string.level_see_result else R.string.level_next),
         onNext = vm::next,
       )
     }
@@ -249,14 +256,14 @@ private fun HintCard(s: LevelUiState, onMore: () -> Unit, onClose: () -> Unit) {
   ) {
     Text("💡", fontSize = 20.sp)
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-      Text(if (s.hintTier == 1) "Pista" else "La regla", color = Cosmic.Photon, style = MaterialTheme.typography.titleSmall)
+      Text(stringResource(if (s.hintTier == 1) R.string.level_hint else R.string.level_rule), color = Cosmic.Photon, style = MaterialTheme.typography.titleSmall)
       Text(s.step.hints.getOrElse(s.hintTier - 1) { "" }, color = Cosmic.Text, style = MaterialTheme.typography.bodyMedium)
       if (s.hintTier == 1) Text(
-        "Necesito más ayuda", color = Cosmic.Accent2, style = MaterialTheme.typography.labelLarge,
+        stringResource(R.string.level_more_help), color = Cosmic.Accent2, style = MaterialTheme.typography.labelLarge,
         modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable { fb.sfx(Sfx.Tap); onMore() }.padding(vertical = 4.dp),
       )
     }
-    IconSquare(onClose, "Cerrar pista", size = 32.dp) { LineIcon(Icons24.Close, Modifier.size(14.dp)) }
+    IconSquare(onClose, stringResource(R.string.level_close_hint), size = 32.dp) { LineIcon(Icons24.Close, Modifier.size(14.dp)) }
   }
 }
 
@@ -286,7 +293,7 @@ fun SolvedSheet(title: String, text: String?, action: String, onNext: () -> Unit
   }
 }
 
-private fun starsTitle(s: Int) = when (s) { 3 -> "¡Perfecto!"; 2 -> "¡Muy bien!"; else -> "¡Superado!" }
+@StringRes private fun starsTitle(s: Int) = when (s) { 3 -> R.string.done_perfect; 2 -> R.string.done_great; else -> R.string.done_passed }
 
 @Composable
 private fun LevelDone(s: LevelUiState, content: Content, game: GameState, nav: Navigator, onLayer: (Layer) -> Unit) {
@@ -307,9 +314,10 @@ private fun LevelDone(s: LevelUiState, content: Content, game: GameState, nav: N
     top = {},
     bottom = {
       Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        AppButton("Campaña", { nav.map(s.level.chapter) }, Modifier.weight(1f), ButtonStyle.Ghost, large = true)
-        if (next != null) AppButton("Siguiente nivel →", { nav.replaceLevel(next.id) }, Modifier.weight(1.6f), ButtonStyle.Primary, large = true)
-        else AppButton("Modo Dominio →", { nav.home(); nav.practice() }, Modifier.weight(1.6f), ButtonStyle.Primary, large = true)
+        // The secondary button takes the width its label needs (it varies by language); the primary one fills the rest.
+        AppButton(stringResource(R.string.done_campaign), { nav.map(s.level.chapter) }, style = ButtonStyle.Ghost, large = true)
+        if (next != null) AppButton(stringResource(R.string.done_next_level), { nav.replaceLevel(next.id) }, Modifier.weight(1f), ButtonStyle.Primary, large = true)
+        else AppButton(stringResource(R.string.done_mastery), { nav.home(); nav.practice() }, Modifier.weight(1f), ButtonStyle.Primary, large = true)
       }
     },
   ) {
@@ -317,11 +325,11 @@ private fun LevelDone(s: LevelUiState, content: Content, game: GameState, nav: N
       Confetti(Modifier.fillMaxWidth().height(150.dp))
       Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Stars(r.stars, size = 48.dp, animate = true)
-        Text(if (next == null) "¡Campaña completada!" else starsTitle(r.stars), style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
+        Text(stringResource(if (next == null) R.string.done_campaign_done else starsTitle(r.stars)), style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
           Text(
-            (if (s.mistakes == 0) "Sin errores" else "${s.mistakes} ${if (s.mistakes == 1) "error" else "errores"}") + " · " +
-              (if (s.hintsUsed == 0) "sin pistas" else "${s.hintsUsed} ${if (s.hintsUsed == 1) "pista" else "pistas"}"),
+            (if (s.mistakes == 0) stringResource(R.string.done_no_mistakes) else pluralStringResource(R.plurals.done_mistakes, s.mistakes, s.mistakes)) + " · " +
+              (if (s.hintsUsed == 0) stringResource(R.string.done_no_hints) else pluralStringResource(R.plurals.done_hints, s.hintsUsed, s.hintsUsed)),
             color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium,
           )
           if (r.xp > 0) Text(
@@ -338,13 +346,13 @@ private fun LevelDone(s: LevelUiState, content: Content, game: GameState, nav: N
     }
 
     GlassCard(Modifier.fillMaxWidth()) {
-      Eyebrow("Comprende")
+      Eyebrow(stringResource(R.string.done_understand))
       ExplanationTabs(s.level.explanation, game.mathUnlocked, onView = onLayer)
     }
 
     if (r.newConcepts.isNotEmpty()) {
       GlassCard(Modifier.fillMaxWidth(), border = Cosmic.Positron.copy(alpha = 0.35f)) {
-        Eyebrow("Nuevo en tu colección")
+        Eyebrow(stringResource(R.string.done_new_in_collection))
         r.newConcepts.forEach { id ->
           Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(content.conceptById[id]?.symbol ?: "✦", color = Cosmic.Positron, fontFamily = SpaceGrotesk, fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -358,13 +366,13 @@ private fun LevelDone(s: LevelUiState, content: Content, game: GameState, nav: N
       if (ch != null) {
         val c = Cosmic.chapter(ch.color)
         GlassCard(Modifier.fillMaxWidth(), background = Brush.verticalGradient(listOf(c.copy(alpha = 0.16f), c.copy(alpha = 0.04f))), border = c.copy(alpha = 0.5f)) {
-          Eyebrow("Capítulo desbloqueado", color = c)
+          Eyebrow(stringResource(R.string.done_chapter_unlocked), color = c)
           Text("${ch.id}. ${ch.title}", style = MaterialTheme.typography.titleLarge, color = Cosmic.Text)
           Text(ch.goals, color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
         }
       }
     }
-    if (s.level.id == 5) Text("🔓 Has desbloqueado la capa de explicación matemática.", color = Cosmic.Photon, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    if (s.level.id == 5) Text(stringResource(R.string.done_math_unlocked), color = Cosmic.Photon, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
   }
 }
 

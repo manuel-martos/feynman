@@ -28,7 +28,7 @@ class ConnectTest {
   @Test fun noDuplicateLineWithoutLoops() {
     val once = (connect(step.diagram, vertices[0], vertices[1], EdgeType.Photon, false) as ConnectResult.Ok).diagram
     val twice = connect(once, vertices[0], vertices[1], EdgeType.Photon, false)
-    assertEquals(ConnectResult.Denied("Ya hay una línea entre esos dos puntos."), twice)
+    assertEquals(ConnectResult.Denied(R.string.editor_parallel), twice)
   }
 
   @Test fun vertexCapacityIsThree() {

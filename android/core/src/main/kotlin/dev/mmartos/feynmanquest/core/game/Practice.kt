@@ -2,18 +2,18 @@ package dev.mmartos.feynmanquest.core.game
 
 import dev.mmartos.feynmanquest.core.content.ChoiceOption
 import dev.mmartos.feynmanquest.core.content.ChoiceStep
+import dev.mmartos.feynmanquest.core.content.PracticeText
 import dev.mmartos.feynmanquest.core.content.Step
 import dev.mmartos.feynmanquest.core.content.TapMode
 import dev.mmartos.feynmanquest.core.content.TapStep
 import dev.mmartos.feynmanquest.core.content.Tappable
-import dev.mmartos.feynmanquest.core.content.issueText
 import dev.mmartos.feynmanquest.core.engine.Channel
 import dev.mmartos.feynmanquest.core.engine.Diagram
 import dev.mmartos.feynmanquest.core.engine.EdgeRole
 import dev.mmartos.feynmanquest.core.engine.EdgeType
+import dev.mmartos.feynmanquest.core.engine.Issue
 import dev.mmartos.feynmanquest.core.engine.NodeKind
 import dev.mmartos.feynmanquest.core.engine.PROCESSES
-import dev.mmartos.feynmanquest.core.engine.Species
 import dev.mmartos.feynmanquest.core.engine.channelOf
 import dev.mmartos.feynmanquest.core.engine.edgeRole
 import dev.mmartos.feynmanquest.core.engine.enumerateTree2to2
@@ -21,19 +21,17 @@ import dev.mmartos.feynmanquest.core.engine.validate
 import kotlin.random.Random
 
 /**
- * "Dominio" mode — procedurally generated review questions. Diagrams come
+ * Mastery mode — procedurally generated review questions. Diagrams come
  * from the engine's enumerator, so every question is new yet always correct.
- * Port of src/content/es/practice.ts.
+ * Port of src/content/practice.ts; the wording comes from the content's `practice` table.
  */
-class PracticeGenerator(private val random: Random = Random.Default) {
-  private val names = linkedMapOf(
-    "moller" to "Dispersión de Møller (e⁻e⁻ → e⁻e⁻)",
-    "bhabha" to "Dispersión de Bhabha (e⁻e⁺ → e⁻e⁺)",
-    "annihilation" to "Aniquilación (e⁻e⁺ → γγ)",
-    "compton" to "Dispersión Compton (e⁻γ → e⁻γ)",
-    "pairProduction" to "Creación de pares (γγ → e⁻e⁺)",
-    "positronScattering" to "Dispersión positrón–positrón (e⁺e⁺ → e⁺e⁺)",
-  )
+class PracticeGenerator(
+  private val text: PracticeText,
+  /** Explanation of a validation issue, in the same language as [text]. */
+  private val issueBody: (Issue) -> String,
+  private val random: Random = Random.Default,
+) {
+  private val names = text.processes
   private var uid = 0
   private fun sid(k: String) = "$k-${uid++}"
   private fun <T> List<T>.pick(): T = this[random.nextInt(size)]
@@ -53,12 +51,12 @@ class PracticeGenerator(private val random: Random = Random.Default) {
     val others = names.keys.filter { it != p }.shuffled(random).take(2)
     return ChoiceStep(
       id = sid("identify"),
-      prompt = "¿Qué proceso representa este diagrama?",
+      prompt = text.identify.prompt,
       diagram = d,
       options = (listOf(p) + others).shuffled(random).map { x ->
-        ChoiceOption(x, names.getValue(x), correct = x == p, feedback = if (x == p) null else "Lee primero las partículas de la izquierda (entran) y después las de la derecha (salen).")
+        ChoiceOption(x, names.getValue(x), correct = x == p, feedback = if (x == p) null else text.identify.feedback)
       },
-      hints = listOf("Identifica las partículas que entran por la izquierda.", "Flecha a favor del tiempo: e⁻. Contra el tiempo: e⁺. Ondulada: γ."),
+      hints = text.identify.hints,
     )
   }
 
@@ -66,13 +64,13 @@ class PracticeGenerator(private val random: Random = Random.Default) {
     val (_, d) = randomDiagram(pool)
     return TapStep(
       id = sid("internal"),
-      prompt = "Toca la línea interna (la partícula virtual).",
+      prompt = text.internal.prompt,
       diagram = d,
       targets = d.edges.filter { d.edgeRole(it) == EdgeRole.Internal }.map { it.id },
       mode = TapMode.Any,
       tappable = Tappable.Edges,
-      wrongDefault = "Esa línea toca un borde: es externa.",
-      hints = listOf("Busca la línea que une dos vértices.", "No toca ningún borde del diagrama."),
+      wrongDefault = text.internal.wrongDefault,
+      hints = text.internal.hints,
     )
   }
 
@@ -80,21 +78,18 @@ class PracticeGenerator(private val random: Random = Random.Default) {
     val (p, d) = randomDiagram(pool)
     val legs = PROCESSES.getValue(p)
     val leg = legs.pick()
-    val word = when (leg.species) { Species.Electron -> "electrón"; Species.Positron -> "positrón"; Species.Photon -> "fotón" }
-    val side = if (leg.kind == NodeKind.In) "entra" else "sale"
     val targets = legs.filter { it.species == leg.species && it.kind == leg.kind }.map { it.id }
+    val prompts = text.species.prompts.getValue(leg.species.id)
+    val side = if (leg.kind == NodeKind.In) prompts.incoming else prompts.outgoing
     return TapStep(
       id = sid("species"),
-      prompt = "Toca ${if (targets.size > 1) "un" else "el"} $word que $side.",
+      prompt = if (targets.size > 1) side.many else side.one,
       diagram = d,
       targets = targets,
       mode = TapMode.Any,
       tappable = Tappable.Edges,
-      wrongDefault = "Fíjate en el tipo de línea, en su flecha y en el lado donde está.",
-      hints = listOf(
-        if (leg.kind == NodeKind.In) "Lo que entra está a la izquierda." else "Lo que sale está a la derecha.",
-        "Flecha a favor del tiempo: e⁻. Contra el tiempo: e⁺. Ondulada: γ.",
-      ),
+      wrongDefault = text.species.wrongDefault,
+      hints = listOf(if (leg.kind == NodeKind.In) text.species.hintIn else text.species.hintOut, text.species.hint),
     )
   }
 
@@ -114,16 +109,16 @@ class PracticeGenerator(private val random: Random = Random.Default) {
       shown = d.copy(edges = edges)
     }
     val r = validate(shown)
-    val why = if (r.ok) "Cada vértice tiene un fotón, una flecha que entra y otra que sale." else issueText(r.issues[0]).body
+    val why = if (r.ok) text.validity.valid else issueBody(r.issues[0])
     return ChoiceStep(
       id = sid("valid"),
-      prompt = "¿Cumple este diagrama las reglas de QED?",
+      prompt = text.validity.prompt,
       diagram = shown,
       options = listOf(
-        ChoiceOption("yes", "Sí, es válido", correct = r.ok, feedback = if (r.ok) null else why),
-        ChoiceOption("no", "No, rompe alguna regla", correct = !r.ok, feedback = if (r.ok) why else null),
+        ChoiceOption("yes", text.validity.yes, correct = r.ok, feedback = if (r.ok) null else why),
+        ChoiceOption("no", text.validity.no, correct = !r.ok, feedback = if (r.ok) why else null),
       ),
-      hints = listOf("Revisa los vértices uno a uno.", "En cada vértice: exactamente un fotón, una flecha que entra y una que sale."),
+      hints = text.validity.hints,
       solved = why,
     )
   }
@@ -131,19 +126,14 @@ class PracticeGenerator(private val random: Random = Random.Default) {
   private fun channel(pool: List<String>): Step {
     val (_, d) = randomDiagram(pool)
     val ch = channelOf(d)!!
-    val text = mapOf(
-      Channel.S to "Canal s: las dos partículas iniciales comparten vértice",
-      Channel.T to "Canal t: cada partícula inicial comparte vértice con la final del mismo lado",
-      Channel.U to "Canal u: las líneas se cruzan",
-    )
     return ChoiceStep(
       id = sid("channel"),
-      prompt = "¿Qué tipo de contribución (canal) es este diagrama?",
+      prompt = text.channel.prompt,
       diagram = d,
       options = Channel.entries.map { c ->
-        ChoiceOption(c.id, text.getValue(c), correct = c == ch, feedback = if (c == ch) null else "Mira qué partículas comparten el vértice con la de arriba a la izquierda.")
+        ChoiceOption(c.id, text.channel.options.getValue(c.id), correct = c == ch, feedback = if (c == ch) null else text.channel.feedback)
       },
-      hints = listOf("Fíjate en la partícula de arriba a la izquierda.", "¿Comparte vértice con la otra inicial (s), con la final de arriba (t) o con la final de abajo (u)?"),
+      hints = text.channel.hints,
     )
   }
 

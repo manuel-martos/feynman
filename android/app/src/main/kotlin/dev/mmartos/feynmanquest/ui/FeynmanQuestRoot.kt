@@ -18,6 +18,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,6 +29,9 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import dev.mmartos.feynmanquest.R
+import dev.mmartos.feynmanquest.core.content.Content
+import dev.mmartos.feynmanquest.core.content.Language
 import dev.mmartos.feynmanquest.core.game.GameState
 import dev.mmartos.feynmanquest.ui.components.CosmicBackground
 import dev.mmartos.feynmanquest.ui.feedback.LocalFeedback
@@ -50,6 +54,9 @@ import dev.mmartos.feynmanquest.ui.screens.MapScreen
 import dev.mmartos.feynmanquest.ui.screens.OnboardingScreen
 import dev.mmartos.feynmanquest.ui.screens.SettingsScreen
 import dev.mmartos.feynmanquest.ui.theme.FeynmanQuestTheme
+
+/** Language of the content on screen; it always matches the resources Android resolved. */
+val LocalLanguage = staticCompositionLocalOf { Language.En }
 
 /** Space the docked bottom bar takes, for screens to pad their scrolling content. */
 val LocalBottomBarPadding = staticCompositionLocalOf { PaddingValues(0.dp) }
@@ -84,22 +91,26 @@ fun FeynmanQuestRoot(vm: AppViewModel = hiltViewModel()) {
   val systemReduced = androidx.compose.runtime.remember(context) {
     android.provider.Settings.Global.getFloat(context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
   }
+  // values/, values-es/ and values-ca/ each name their content file, so text and content never mix languages.
+  val language = Language.of(stringResource(R.string.content_locale))
+  val content = androidx.compose.runtime.remember(language) { vm.content(language) }
   FeynmanQuestTheme(reducedMotion = (s?.settings?.reducedMotion == true) || systemReduced) {
-    CosmicBackground {
-      // Wait for the first read of the saved progress (a few ms) to avoid flashing onboarding.
-      if (s != null) App(vm, s)
+    CompositionLocalProvider(LocalLanguage provides language) {
+      CosmicBackground {
+        // Wait for the first read of the saved progress (a few ms) to avoid flashing onboarding.
+        if (s != null) App(vm, s, content)
+      }
     }
   }
 }
 
 @Composable
-private fun App(vm: AppViewModel, state: GameState) {
+private fun App(vm: AppViewModel, state: GameState, content: Content) {
   val feedback = rememberFeedback(state.settings.sound, state.settings.haptics)
   val stack = rememberNavBackStack(if (state.onboarded) HomeRoute else OnboardingRoute)
   val nav = androidx.compose.runtime.remember(stack) { Navigator(stack) }
   val current = stack.lastOrNull()
   val tab = current?.tab
-  val content = vm.content
 
   CompositionLocalProvider(LocalFeedback provides feedback) {
     Box {

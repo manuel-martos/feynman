@@ -14,18 +14,21 @@ export function xpGain(previousStars: number, newStars: number): number {
   return base + Math.max(0, newStars - previousStars) * XP_PER_STAR;
 }
 
+export type RankId = 'curious' | 'apprentice' | 'reader' | 'builder' | 'physicist' | 'disciple';
+
 export interface Rank {
-  title: string;
+  /** Display names live in the UI dictionaries (src/i18n). */
+  id: RankId;
   minXp: number;
 }
 
 export const RANKS: Rank[] = [
-  { title: 'Curioso', minXp: 0 },
-  { title: 'Aprendiz cuántico', minXp: 300 },
-  { title: 'Lector de diagramas', minXp: 800 },
-  { title: 'Constructor de vértices', minXp: 1500 },
-  { title: 'Físico de partículas', minXp: 2400 },
-  { title: 'Discípulo de Feynman', minXp: 3000 },
+  { id: 'curious', minXp: 0 },
+  { id: 'apprentice', minXp: 300 },
+  { id: 'reader', minXp: 800 },
+  { id: 'builder', minXp: 1500 },
+  { id: 'physicist', minXp: 2400 },
+  { id: 'disciple', minXp: 3000 },
 ];
 
 export function rankFor(xp: number): { rank: Rank; next?: Rank; progress: number } {

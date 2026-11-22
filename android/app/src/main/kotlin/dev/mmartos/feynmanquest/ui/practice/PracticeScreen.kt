@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -42,7 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.game.GameState
+import dev.mmartos.feynmanquest.ui.LocalLanguage
 import dev.mmartos.feynmanquest.ui.Navigator
 import dev.mmartos.feynmanquest.ui.components.AppButton
 import dev.mmartos.feynmanquest.ui.components.Badge
@@ -60,13 +63,15 @@ import dev.mmartos.feynmanquest.ui.theme.Cosmic
 import dev.mmartos.feynmanquest.ui.theme.SpaceGrotesk
 
 @Composable
-fun PracticeScreen(game: GameState, nav: Navigator, vm: PracticeViewModel = hiltViewModel()) {
+fun PracticeScreen(game: GameState, nav: Navigator) {
+  val language = LocalLanguage.current
+  val vm = hiltViewModel<PracticeViewModel, PracticeViewModel.Factory>(key = "practice-${language.id}", creationCallback = { it.create(language) })
   val s by vm.state.collectAsStateWithLifecycle()
   val fb = LocalFeedback.current
   if (!game.mathUnlocked) {
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-      Text("El modo Dominio se desbloquea al completar el capítulo 1.", color = Cosmic.Text, style = MaterialTheme.typography.bodyLarge)
-      AppButton("Ir a la campaña", { nav.map() }, style = ButtonStyle.Primary)
+      Text(stringResource(R.string.practice_locked), color = Cosmic.Text, style = MaterialTheme.typography.bodyLarge)
+      AppButton(stringResource(R.string.practice_to_campaign), { nav.map() }, style = ButtonStyle.Primary)
     }
     return
   }
@@ -77,21 +82,21 @@ fun PracticeScreen(game: GameState, nav: Navigator, vm: PracticeViewModel = hilt
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
           MasteryRing(s.percent)
           val pct = s.percent
-          Text(if (pct == 100) "¡Dominio total!" else if (pct >= 66) "¡Buen dominio!" else "Sigue practicando", style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
-          Text("${s.firstTry} de ${s.steps.size} a la primera", color = Cosmic.Text2, style = MaterialTheme.typography.bodyLarge)
+          Text(stringResource(if (pct == 100) R.string.practice_total else if (pct >= 66) R.string.practice_good else R.string.practice_keep_going), style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
+          Text(stringResource(R.string.practice_first_try_count, s.firstTry, s.steps.size), color = Cosmic.Text2, style = MaterialTheme.typography.bodyLarge)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-          AppButton("Inicio", { nav.home() }, Modifier.weight(1f), ButtonStyle.Ghost, large = true)
-          AppButton("Otra ronda", vm::again, Modifier.weight(1.6f), ButtonStyle.Primary, large = true)
+          AppButton(stringResource(R.string.practice_home), { nav.home() }, style = ButtonStyle.Ghost, large = true)
+          AppButton(stringResource(R.string.practice_again), vm::again, Modifier.weight(1f), ButtonStyle.Primary, large = true)
         }
       }
       return@Box
     }
     Column(Modifier.widthIn(max = 560.dp).fillMaxSize().statusBarsPadding()) {
       Row(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-        IconSquare({ nav.home() }, "Salir") { LineIcon(Icons24.Close) }
+        IconSquare({ nav.home() }, stringResource(R.string.practice_exit)) { LineIcon(Icons24.Close) }
         StepProgress(s.steps.size, s.idx, s.solved, Modifier.weight(1f))
-        Badge("Dominio", Cosmic.Virtual, icon = "∞")
+        Badge(stringResource(R.string.practice_badge), Cosmic.Virtual, icon = "∞")
       }
       key(s.step.id) {
         Column(
@@ -105,7 +110,7 @@ fun PracticeScreen(game: GameState, nav: Navigator, vm: PracticeViewModel = hilt
       }
     }
     AnimatedVisibility(s.solved, Modifier.align(Alignment.BottomCenter), enter = slideInVertically(tween(380)) { it } + fadeIn(), exit = slideOutVertically { it } + fadeOut()) {
-      SolvedSheet(if (s.missed) "Resuelto" else "¡A la primera!", s.step.solved, "Continuar", vm::next)
+      SolvedSheet(stringResource(if (s.missed) R.string.practice_solved else R.string.practice_first_try), s.step.solved, stringResource(R.string.practice_next), vm::next)
     }
   }
 }

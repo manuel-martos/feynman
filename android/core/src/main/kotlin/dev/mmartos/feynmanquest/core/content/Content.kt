@@ -130,7 +130,7 @@ data class Concept(
 )
 
 @Serializable
-data class Rank(val title: String, val minXp: Int)
+data class Rank(val id: String, val title: String, val minXp: Int)
 
 @Serializable
 data class Scoring(val xpBase: Int, val xpPerStar: Int, val ranks: List<Rank>)
@@ -145,8 +145,10 @@ data class Content(
   val levels: List<Level>,
   val concepts: List<Concept>,
   val scoring: Scoring,
+  val practice: PracticeText,
   val art: Art,
 ) {
+  val language: Language get() = Language.of(locale)
   val conceptById: Map<String, Concept> by lazy { concepts.associateBy { it.id } }
   fun level(id: Int): Level? = levels.firstOrNull { it.id == id }
   fun chapter(id: Int): Chapter? = chapters.firstOrNull { it.id == id }

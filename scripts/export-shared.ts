@@ -1,7 +1,8 @@
 /**
  * Exports the single sources of truth that the native apps consume:
- *   shared/content/es.json   — chapters, levels, concepts, ranks (plain data)
- *   shared/engine-cases.json — golden cases computed by the TypeScript engine
+ *   shared/content/{es,ca,en}.json — chapters, levels, concepts, ranks, Mastery-mode text
+ *   shared/engine-cases.json       — golden cases computed by the TypeScript engine, with
+ *                                    issue texts and narration in every language
  *
  * Run with `npm run export:shared`. CI fails if the committed files are stale.
  */
@@ -24,7 +25,10 @@ import {
   type Diagram,
   type ValidationOptions,
 } from '../src/engine';
-import { content, issueText, narrate } from '../src/content';
+import { LOCALES, pack } from '../src/content';
+import { ca } from '../src/i18n/ca';
+import { en } from '../src/i18n/en';
+import { es } from '../src/i18n/es';
 import { RANKS, XP_BASE, XP_PER_STAR } from '../src/game/scoring';
 import { plain, process } from '../src/content/diagrams';
 
@@ -38,15 +42,23 @@ const write = (path: string, data: unknown, pretty = true) => {
 
 /* ---------------- content ---------------- */
 
-write('shared/content/es.json', {
-  locale: 'es',
-  chapters: content.chapters,
-  levels: content.levels,
-  concepts: content.concepts,
-  scoring: { xpBase: XP_BASE, xpPerStar: XP_PER_STAR, ranks: RANKS },
-  // Decorative diagrams used outside the levels (home hero, onboarding).
-  art: { home: plain(process('bhabha', 's')), onboarding: plain(process('moller', 't')) },
-});
+const DICTS = { es, ca, en };
+for (const l of LOCALES) {
+  const p = pack(l);
+  write(`shared/content/${l}.json`, {
+    locale: l,
+    chapters: p.content.chapters,
+    levels: p.content.levels,
+    concepts: p.content.concepts,
+    scoring: { xpBase: XP_BASE, xpPerStar: XP_PER_STAR, ranks: RANKS.map((r) => ({ ...r, title: DICTS[l].ranks[r.id] })) },
+    practice: p.practice,
+    // Decorative diagrams used outside the levels (home hero, onboarding).
+    art: { home: plain(process('bhabha', 's')), onboarding: plain(process('moller', 't')) },
+  });
+}
+const { content } = pack('es');
+const packs = LOCALES.map((l) => [l, pack(l)] as const);
+const perLocale = <T,>(f: (p: ReturnType<typeof pack>) => T) => Object.fromEntries(packs.map(([l, p]) => [l, f(p)]));
 
 /* ---------------- engine golden cases ---------------- */
 
@@ -145,7 +157,7 @@ const cases = diagrams.map(({ name, d, opts }) => {
     diagram: d,
     validations: opts.map((o) => {
       const r = validate(d, o);
-      return { options: o, ok: r.ok, issues: r.issues, texts: r.issues.map(issueText) };
+      return { options: o, ok: r.ok, issues: r.issues, texts: perLocale((p) => r.issues.map(p.issueText)) };
     }),
     topology: topologySignature(d),
     channel: channelOf(d),
@@ -164,7 +176,7 @@ const cases = diagrams.map(({ name, d, opts }) => {
       // Narration is only defined for diagrams whose vertices all have degree 3.
       narration: validate(d, { loops: 9 }).issues.some((i) => i.layer === 'structural' || i.layer === 'theory')
         ? null
-        : Array.from({ length: tl.events.length + 2 }, (_, k) => narrate(tl, k)),
+        : perLocale((p) => Array.from({ length: tl.events.length + 2 }, (_, k) => p.narrate(tl, k))),
     },
   };
 });

@@ -7,6 +7,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.mmartos.feynmanquest.core.content.Chapter
+import dev.mmartos.feynmanquest.core.content.Language
 import dev.mmartos.feynmanquest.core.content.Level
 import dev.mmartos.feynmanquest.core.engine.Diagram
 import dev.mmartos.feynmanquest.core.game.LevelResult
@@ -43,12 +44,13 @@ data class LevelUiState(
 @HiltViewModel(assistedFactory = LevelViewModel.Factory::class)
 class LevelViewModel @AssistedInject constructor(
   @Assisted levelId: Int,
+  @Assisted language: Language,
   contentRepository: ContentRepository,
   private val game: GameRepository,
 ) : ViewModel() {
-  @AssistedFactory interface Factory { fun create(levelId: Int): LevelViewModel }
+  @AssistedFactory interface Factory { fun create(levelId: Int, language: Language): LevelViewModel }
 
-  val content = contentRepository.content
+  val content = contentRepository.content(language)
   private val level = content.level(levelId)
   private var startedAt = 0L
 

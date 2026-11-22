@@ -2,11 +2,16 @@ package dev.mmartos.feynmanquest.ui.practice
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.mmartos.feynmanquest.core.content.Language
 import dev.mmartos.feynmanquest.core.content.Step
+import dev.mmartos.feynmanquest.core.content.issueText
 import dev.mmartos.feynmanquest.core.game.PracticeGenerator
+import dev.mmartos.feynmanquest.data.ContentRepository
 import dev.mmartos.feynmanquest.data.GameRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,10 +30,16 @@ data class PracticeUiState(
   val percent get() = firstTry * 100 / steps.size
 }
 
-/** "Dominio" sessions: six generated questions, scored on first-try answers. */
-@HiltViewModel
-class PracticeViewModel @Inject constructor(private val game: GameRepository) : ViewModel() {
-  private val generator = PracticeGenerator()
+/** Mastery sessions: six generated questions, scored on first-try answers. */
+@HiltViewModel(assistedFactory = PracticeViewModel.Factory::class)
+class PracticeViewModel @AssistedInject constructor(
+  @Assisted language: Language,
+  contentRepository: ContentRepository,
+  private val game: GameRepository,
+) : ViewModel() {
+  @AssistedFactory interface Factory { fun create(language: Language): PracticeViewModel }
+
+  private val generator = PracticeGenerator(contentRepository.content(language).practice, { issueText(it, language).body })
   private fun levelsDone() = game.state.value?.levelsDone ?: 0
 
   private val _state = MutableStateFlow(PracticeUiState(generator.session(levelsDone())))

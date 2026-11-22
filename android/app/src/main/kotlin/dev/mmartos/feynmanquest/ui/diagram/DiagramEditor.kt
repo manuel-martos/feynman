@@ -1,5 +1,6 @@
 package dev.mmartos.feynmanquest.ui.diagram
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,12 +37,15 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.engine.Diagram
 import dev.mmartos.feynmanquest.core.engine.DiagramEdge
 import dev.mmartos.feynmanquest.core.engine.EdgeType
@@ -65,7 +69,7 @@ private var edgeCounter = 0
 /** Result of trying to connect two points: the new diagram, or why not. */
 sealed interface ConnectResult {
   data class Ok(val diagram: Diagram) : ConnectResult
-  data class Denied(val notice: String?) : ConnectResult
+  data class Denied(@StringRes val notice: Int?) : ConnectResult
 }
 
 /** Pure connection rules of the editor (port of DiagramEditor.connect). */
@@ -73,18 +77,17 @@ fun connect(diagram: Diagram, from: String, to: String, tool: EdgeType, allowPar
   val nodes = diagram.nodeMap()
   val a = nodes[from] ?: return ConnectResult.Denied(null)
   val b = nodes[to] ?: return ConnectResult.Denied(null)
-  if (a.isExternal && b.isExternal) return ConnectResult.Denied("Cada partícula externa debe llegar a un vértice: ahí es donde ocurre la interacción.")
+  if (a.isExternal && b.isExternal) return ConnectResult.Denied(R.string.editor_external_to_external)
   if (from == to) return ConnectResult.Denied(null)
   val parallel = diagram.edges.filter { (it.from == from && it.to == to) || (it.from == to && it.to == from) }
   if (parallel.isNotEmpty() && (!allowParallel || parallel.size >= 2 || a.isExternal || b.isExternal)) {
-    return ConnectResult.Denied("Ya hay una línea entre esos dos puntos.")
+    return ConnectResult.Denied(R.string.editor_parallel)
   }
   for (id in listOf(from, to)) {
     val cap = if (nodes.getValue(id).kind == NodeKind.Vertex) 3 else 1
     if (diagram.degree(id) >= cap) {
       return ConnectResult.Denied(
-        if (nodes.getValue(id).kind == NodeKind.Vertex) "Un vértice QED une exactamente tres líneas. Borra una para cambiarla."
-        else "Cada partícula externa tiene una sola línea.",
+        if (nodes.getValue(id).kind == NodeKind.Vertex) R.string.editor_vertex_full else R.string.editor_external_full,
       )
     }
   }
@@ -125,6 +128,7 @@ fun DiagramEditor(
   onNotice: (String) -> Unit = {},
 ) {
   val fb = LocalFeedback.current
+  val res = LocalResources.current
   val initial = remember { diagram }
   var tool by remember { mutableStateOf(palette.firstOrNull() ?: EdgeType.Fermion) }
   if (tool !in palette && palette.isNotEmpty()) tool = palette.first()
@@ -149,7 +153,7 @@ fun DiagramEditor(
   fun tryConnect(from: String, to: String) {
     when (val r = connect(current, from, to, currentTool, allowParallel)) {
       is ConnectResult.Ok -> { fb.sfx(Sfx.Connect); fb.haptic(Haptic.Connect); commit(r.diagram) }
-      is ConnectResult.Denied -> r.notice?.let { fb.sfx(Sfx.Deny); fb.haptic(Haptic.Reject); onNotice(it) }
+      is ConnectResult.Denied -> r.notice?.let { fb.sfx(Sfx.Deny); fb.haptic(Haptic.Reject); onNotice(res.getString(it)) }
     }
   }
 
@@ -181,7 +185,7 @@ fun DiagramEditor(
             val e = edgeAt(p)
             when {
               e == null -> pending = null
-              e.locked != false -> { onNotice("Esta línea forma parte del enunciado y no se puede cambiar."); fb.sfx(Sfx.Deny); fb.haptic(Haptic.Reject) }
+              e.locked != false -> { onNotice(res.getString(R.string.editor_locked)); fb.sfx(Sfx.Deny); fb.haptic(Haptic.Reject) }
               else -> { menuEdge = e.id; fb.sfx(Sfx.Tap) }
             }
             return@awaitEachGesture
@@ -223,7 +227,7 @@ fun DiagramEditor(
         diagram,
         Modifier.fillMaxWidth().then(gestures),
         errors = errors, success = success, snapNode = snap, activeNode = dragFrom ?: pending, socketHints = true,
-        description = "Editor de diagrama: arrastra desde un punto a otro para trazar una línea",
+        description = stringResource(R.string.editor_description),
       ) {
         if (ghostFrom != null && dragMoved) {
           if (tool == EdgeType.Photon) {
@@ -248,14 +252,14 @@ fun DiagramEditor(
             offset = DpOffset(0.dp, 0.dp), shape = RoundedCornerShape(16.dp), containerColor = Cosmic.SurfaceStrong,
           ) {
             if (me.type == EdgeType.Fermion) DropdownMenuItem(
-              text = { Text("⇄  Invertir flecha", color = Cosmic.Text) },
+              text = { Text(stringResource(R.string.editor_flip), color = Cosmic.Text) },
               onClick = {
                 commit(diagram.copy(edges = diagram.edges.map { if (it.id == me.id) it.copy(from = it.to, to = it.from) else it }))
                 fb.sfx(Sfx.Connect); menuEdge = null
               },
             )
             DropdownMenuItem(
-              text = { Text("✕  Borrar", color = Color(0xFFFFB3BA)) },
+              text = { Text(stringResource(R.string.editor_delete), color = Color(0xFFFFB3BA)) },
               onClick = {
                 commit(diagram.copy(edges = diagram.edges.filter { it.id != me.id }))
                 fb.sfx(Sfx.Remove); menuEdge = null
@@ -293,23 +297,23 @@ fun DiagramEditor(
               }
             }
           }
-          Text(if (t == EdgeType.Photon) "Fotón" else "Electrón / positrón", color = Cosmic.Text, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2)
+          Text(stringResource(if (t == EdgeType.Photon) R.string.editor_photon else R.string.editor_fermion), color = Cosmic.Text, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2)
         }
       }
       IconSquare(
         onClick = { history.removeLastOrNull()?.let { onChange(it); fb.sfx(Sfx.Remove) } },
-        label = "Deshacer", enabled = history.isNotEmpty() && !disabled, size = 48.dp,
+        label = stringResource(R.string.editor_undo), enabled = history.isNotEmpty() && !disabled, size = 48.dp,
       ) { LineIcon(Icons24.Undo) }
       IconSquare(
         onClick = { commit(initial); menuEdge = null; pending = null; fb.sfx(Sfx.Remove) },
-        label = "Reiniciar diagrama", enabled = !disabled, size = 48.dp,
+        label = stringResource(R.string.editor_reset), enabled = !disabled, size = 48.dp,
       ) { LineIcon(Icons24.Reset) }
     }
     Text(
       when {
-        pending != null -> "Ahora toca el punto de destino."
-        tool == EdgeType.Fermion -> "Arrastra entre dos puntos. La flecha sigue el sentido de tu gesto."
-        else -> "Arrastra entre dos puntos para trazar un fotón."
+        pending != null -> stringResource(R.string.editor_pick_target)
+        tool == EdgeType.Fermion -> stringResource(R.string.editor_fermion_help)
+        else -> stringResource(R.string.editor_photon_help)
       },
       Modifier.fillMaxWidth(), color = Cosmic.Text2, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center,
     )

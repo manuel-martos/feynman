@@ -6,6 +6,7 @@ import { sfx } from './audio';
 import { DiagramEditor } from './diagram/DiagramEditor';
 import { DiagramView } from './diagram/DiagramView';
 import { DiagramPlayback } from './diagram/DiagramPlayback';
+import { t } from '../i18n';
 
 export interface Feedback {
   tone: 'error' | 'info';
@@ -56,7 +57,7 @@ function TapPlayer({ step, solved, onMistake, onSolved, haptics }: StepPlayerPro
 
   const wrong = (ids: string[], msg: string) => {
     setErrors(new Set(ids));
-    setFb({ tone: 'error', title: 'No es esa', body: msg });
+    setFb({ tone: 'error', title: t.step.wrong, body: msg });
     sfx('error');
     buzz(haptics);
     onMistake();
@@ -91,7 +92,7 @@ function TapPlayer({ step, solved, onMistake, onSolved, haptics }: StepPlayerPro
     }
     const missing = step.targets.filter((t) => !selected.has(t));
     if (missing.length) {
-      setFb({ tone: 'error', title: 'Te falta alguna', body: `Has encontrado ${selected.size} de ${step.targets.length}. Busca las que faltan.` });
+      setFb({ tone: 'error', title: t.step.missing, body: t.step.missingBody(selected.size, step.targets.length) });
       sfx('error');
       buzz(haptics);
       onMistake();
@@ -121,11 +122,11 @@ function TapPlayer({ step, solved, onMistake, onSolved, haptics }: StepPlayerPro
       {step.mode === 'all' && !solved && (
         <div className="action-row">
           <button className="btn primary block" onClick={check} disabled={selected.size === 0}>
-            Comprobar
+            {t.step.check}
           </button>
         </div>
       )}
-      {step.mode === 'any' && !solved && <p className="tap-help">Toca directamente sobre el diagrama.</p>}
+      {step.mode === 'any' && !solved && <p className="tap-help">{t.step.tapHelp}</p>}
     </>
   );
 }
@@ -148,7 +149,7 @@ function ChoicePlayer({ step, solved, onMistake, onSolved, haptics }: StepPlayer
       onSolved();
     } else {
       setWrongPicks(new Set([...wrongPicks, id]));
-      setFb({ tone: 'error', title: 'No exactamente', body: o.feedback ?? 'Piénsalo otra vez.' });
+      setFb({ tone: 'error', title: t.step.notQuite, body: o.feedback ?? t.step.thinkAgain });
       sfx('error');
       buzz(haptics);
       onMistake();
@@ -254,7 +255,7 @@ function BuildPlayer({ step, solved, onMistake, onSolved, haptics }: StepPlayerP
           errors={errors}
           success={solved}
           disabled={solved}
-          onNotice={(msg) => setFb({ tone: 'info', title: 'Ojo', body: msg })}
+          onNotice={(msg) => setFb({ tone: 'info', title: t.step.notice, body: msg })}
           allowParallel={!!step.validation.loops}
         />
       </div>
@@ -262,7 +263,7 @@ function BuildPlayer({ step, solved, onMistake, onSolved, haptics }: StepPlayerP
       {!solved && (
         <div className="action-row">
           <button className="btn primary block" onClick={check}>
-            Comprobar
+            {t.step.check}
           </button>
         </div>
       )}

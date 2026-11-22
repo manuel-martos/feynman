@@ -40,6 +40,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -48,12 +49,14 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.content.narrate
 import dev.mmartos.feynmanquest.core.engine.Diagram
 import dev.mmartos.feynmanquest.core.engine.EdgeType
 import dev.mmartos.feynmanquest.core.engine.Species
 import dev.mmartos.feynmanquest.core.engine.nodeMap
 import dev.mmartos.feynmanquest.core.engine.timeline
+import dev.mmartos.feynmanquest.ui.LocalLanguage
 import dev.mmartos.feynmanquest.ui.components.AppButton
 import dev.mmartos.feynmanquest.ui.components.ButtonStyle
 import dev.mmartos.feynmanquest.ui.components.IconSquare
@@ -151,7 +154,7 @@ fun DiagramPlayback(diagram: Diagram, modifier: Modifier = Modifier, autoPlay: B
   }
   val pending = tl.events.filter { tl.rank.getValue(it.vertex) > tau + 1e-4f }.map { it.vertex }.toSet()
   val frac = tau / steps
-  val caption = narrate(tl, floor(tau + 1e-4f).toInt())
+  val caption = narrate(tl, floor(tau + 1e-4f).toInt(), LocalLanguage.current)
   val idle = !started && !playing
   val measurer = rememberTextMeasurer()
   val flashNode = flash?.let { nodes[it] }
@@ -159,7 +162,7 @@ fun DiagramPlayback(diagram: Diagram, modifier: Modifier = Modifier, autoPlay: B
   Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
     DiagramCanvas(
       diagram, Modifier.fillMaxWidth(), showLabels = showLabels, reveal = reveal, pendingNodes = pending,
-      description = "Diagrama de Feynman leído en el tiempo",
+      description = stringResource(R.string.playback_description),
     ) {
       // Time cursor along the axis.
       drawLine(Cosmic.Accent, Offset(30f, 69.5f), Offset(30f + 40f * frac, 69.5f), 0.6f)
@@ -196,7 +199,7 @@ fun DiagramPlayback(diagram: Diagram, modifier: Modifier = Modifier, autoPlay: B
         .semantics { liveRegion = LiveRegionMode.Polite },
     ) {
       if (idle) {
-        Text("Pulsa ▶ para leer el diagrama como una historia en el tiempo.", color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.playback_hint), color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
       } else {
         AnimatedContent(caption, transitionSpec = { (fadeIn(tween(350)) + slideInVertically { it / 12 }) togetherWith fadeOut(tween(120)) }, label = "caption") { cap ->
           Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -207,7 +210,7 @@ fun DiagramPlayback(diagram: Diagram, modifier: Modifier = Modifier, autoPlay: B
                 Modifier.padding(top = 4.dp).clip(CircleShape).background(Cosmic.Accent.copy(alpha = 0.18f)).border(1.dp, Cosmic.Accent.copy(alpha = 0.4f), CircleShape).padding(horizontal = 10.dp, vertical = 3.dp),
                 verticalAlignment = Alignment.CenterVertically,
               ) {
-                Text("Carga: $ch ", color = Cosmic.Text, style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.playback_charge, ch) + " ", color = Cosmic.Text, style = MaterialTheme.typography.labelMedium)
                 Text("✓", color = Cosmic.Success, style = MaterialTheme.typography.labelMedium)
               }
             }
@@ -217,14 +220,14 @@ fun DiagramPlayback(diagram: Diagram, modifier: Modifier = Modifier, autoPlay: B
     }
 
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
-      IconSquare({ go(ceil(tau - 1e-4f).toInt() - 1) }, "Paso anterior", enabled = target > 0) { LineIcon(Icons24.Prev, stroke = 2f) }
+      IconSquare({ go(ceil(tau - 1e-4f).toInt() - 1) }, stringResource(R.string.playback_prev), enabled = target > 0) { LineIcon(Icons24.Prev, stroke = 2f) }
       AppButton(
-        text = if (playing) "Pausa" else if (tau >= steps) "Ver en el tiempo" else "Seguir",
+        text = stringResource(if (playing) R.string.playback_pause else if (tau >= steps) R.string.playback_watch else R.string.playback_resume),
         onClick = ::toggle, style = ButtonStyle.Primary,
         modifier = Modifier.heightIn(min = 44.dp),
         leading = { LineIcon(if (playing) Icons24.Pause else Icons24.Play, Modifier.size(18.dp), Color.White, stroke = 2.2f, fill = !playing) },
       )
-      IconSquare({ go(floor(tau + 1e-4f).toInt() + 1) }, "Paso siguiente", enabled = target < steps) { LineIcon(Icons24.Next, stroke = 2f) }
+      IconSquare({ go(floor(tau + 1e-4f).toInt() + 1) }, stringResource(R.string.playback_next), enabled = target < steps) { LineIcon(Icons24.Next, stroke = 2f) }
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
       repeat(steps + 1) { i ->

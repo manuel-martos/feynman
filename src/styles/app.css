@@ -1394,6 +1394,12 @@ p {
   color: var(--bg-1);
   border-color: var(--text);
 }
+.language-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .concept-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

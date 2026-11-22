@@ -1,0 +1,23 @@
+{
+ "chapters.1.title": "L'alfabet quàntic",
+ "chapters.1.subtitle": "Línies, fletxes i partícules",
+ "chapters.1.goals": "Reconeix electrons, positrons i fotons. Descobreix que un diagrama no és una trajectòria.",
+ "chapters.2.title": "Les regles d'interacció",
+ "chapters.2.subtitle": "El vèrtex i la càrrega",
+ "chapters.2.goals": "Descobreix el vèrtex QED i la conservació de la càrrega. Distingeix allò admissible d'allò realitzable.",
+ "chapters.3.title": "Partícules que interactuen",
+ "chapters.3.subtitle": "Intercanvis i línies virtuals",
+ "chapters.3.goals": "Combina dos vèrtexs, construeix intercanvis i distingeix les línies internes de les externes.",
+ "chapters.4.title": "Múltiples possibilitats",
+ "chapters.4.subtitle": "Un procés, diverses històries",
+ "chapters.4.goals": "Reconeix diagrames equivalents i les diferents contribucions a un mateix procés.",
+ "chapters.5.title": "El repte final",
+ "chapters.5.subtitle": "Sense instruccions pas a pas",
+ "chapters.5.goals": "Interpreta, construeix i justifica solucions pel teu compte.",
+ "chapters.6.title": "Més vèrtexs, més històries",
+ "chapters.6.subtitle": "Ordre superior",
+ "chapters.6.goals": "Construeix processos de tres vèrtexs, compta totes les seves contribucions i descobreix com es combinen els bosons idèntics.",
+ "chapters.7.title": "Bucles quàntics",
+ "chapters.7.subtitle": "Més enllà de l'arbre",
+ "chapters.7.goals": "Reconeix i construeix bucles: la polarització del buit, el nombre de Schwinger, la llum que dispersa llum i el teorema de Furry."
+}

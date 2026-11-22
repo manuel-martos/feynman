@@ -1,5 +1,6 @@
 package dev.mmartos.feynmanquest.ui.screens
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,12 +33,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.content.Concept
 import dev.mmartos.feynmanquest.core.content.ConceptKind
 import dev.mmartos.feynmanquest.core.content.Content
@@ -53,10 +56,11 @@ import dev.mmartos.feynmanquest.ui.theme.Cosmic
 import dev.mmartos.feynmanquest.ui.theme.SpaceGrotesk
 
 val ConceptKind.color get() = when (this) { ConceptKind.Particle -> Cosmic.Electron; ConceptKind.Rule -> Cosmic.Photon; ConceptKind.Process -> Cosmic.Positron; ConceptKind.Idea -> Cosmic.Virtual }
-val ConceptKind.label get() = when (this) { ConceptKind.Particle -> "Partícula"; ConceptKind.Rule -> "Regla"; ConceptKind.Process -> "Proceso"; ConceptKind.Idea -> "Idea clave" }
+@get:StringRes val ConceptKind.label get() = when (this) { ConceptKind.Particle -> R.string.kind_particle; ConceptKind.Rule -> R.string.kind_rule; ConceptKind.Process -> R.string.kind_process; ConceptKind.Idea -> R.string.kind_idea }
 
-private val FILTERS: List<Pair<ConceptKind?, String>> = listOf(
-  null to "Todo", ConceptKind.Particle to "Partículas", ConceptKind.Rule to "Reglas", ConceptKind.Process to "Procesos", ConceptKind.Idea to "Ideas",
+private val FILTERS: List<Pair<ConceptKind?, Int>> = listOf(
+  null to R.string.library_all, ConceptKind.Particle to R.string.library_particles, ConceptKind.Rule to R.string.library_rules,
+  ConceptKind.Process to R.string.library_processes, ConceptKind.Idea to R.string.library_ideas,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,13 +76,13 @@ fun LibraryScreen(content: Content, state: GameState, onSeen: () -> Unit) {
 
   Page(gap = 14.dp) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      Text("Colección", style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
-      Text("${state.concepts.size} de ${content.concepts.size} descubrimientos", color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
+      Text(stringResource(R.string.library_title), style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
+      Text(stringResource(R.string.library_count, state.concepts.size, content.concepts.size), color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
       ProgressBar(state.concepts.size / content.concepts.size.toFloat(), Modifier.fillMaxWidth().padding(top = 4.dp))
     }
     // Scroll edge to edge, so chips aren't cut off at the page gutter, while still starting aligned with it.
     Row(Modifier.bleedHorizontally(16.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      FILTERS.forEach { (k, label) -> Chip(label, filter == k) { filter = k } }
+      FILTERS.forEach { (k, label) -> Chip(stringResource(label), filter == k) { filter = k } }
     }
     list.chunked(2).forEach { row ->
       Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -99,10 +103,10 @@ fun LibraryScreen(content: Content, state: GameState, onSeen: () -> Unit) {
           ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
               Text(if (has) c.symbol ?: "✦" else "?", fontFamily = SpaceGrotesk, fontWeight = FontWeight.Bold, fontSize = 22.sp, color = if (has) kc else Cosmic.Text3, modifier = Modifier.weight(1f))
-              if (c.id in fresh) Text("NUEVO", Modifier.clip(CircleShape).background(Cosmic.Positron).padding(horizontal = 8.dp, vertical = 2.dp), color = Cosmic.Bg0, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+              if (c.id in fresh) Text(stringResource(R.string.library_new), Modifier.clip(CircleShape).background(Cosmic.Positron).padding(horizontal = 8.dp, vertical = 2.dp), color = Cosmic.Bg0, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
             }
             Text(if (has) c.title else "???", style = MaterialTheme.typography.titleMedium, color = Cosmic.Text)
-            Text(if (has) c.summary else "Sigue jugando para descubrirlo", color = Cosmic.Text2, style = MaterialTheme.typography.bodySmall)
+            Text(if (has) c.summary else stringResource(R.string.library_locked), color = Cosmic.Text2, style = MaterialTheme.typography.bodySmall)
           }
         }
         if (row.size == 1) Box(Modifier.weight(1f))
@@ -121,7 +125,7 @@ fun LibraryScreen(content: Content, state: GameState, onSeen: () -> Unit) {
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp).navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
       ) {
-        Eyebrow(c.kind.label, color = c.kind.color)
+        Eyebrow(stringResource(c.kind.label), color = c.kind.color)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
           c.symbol?.let { Text(it, fontFamily = SpaceGrotesk, fontWeight = FontWeight.Bold, fontSize = 28.sp, color = c.kind.color) }
           Text(c.title, style = MaterialTheme.typography.headlineMedium, color = Cosmic.Text, modifier = Modifier.semantics { heading() })

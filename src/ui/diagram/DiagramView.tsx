@@ -2,6 +2,7 @@ import { forwardRef, useId, type PointerEvent as RPointerEvent, type ReactNode }
 import { SPECIES_SYMBOL, edgeLabel, edgeRole, nodeMap, type Diagram, type DiagramEdge, type DiagramNode } from '../../engine';
 import { arrowHead, labelPoint, straightOrCurvedPath, wavyPath } from './geometry';
 import './diagram.css';
+import { t } from '../../i18n';
 
 export const VIEW_W = 100;
 export const VIEW_H = 72;
@@ -49,13 +50,6 @@ export function edgeClass(d: Diagram, e: DiagramEdge): string {
   return electron ? 'electron' : 'positron';
 }
 
-const SPECIES_NAME: Record<string, string> = {
-  electron: 'electrón',
-  positron: 'positrón',
-  photon: 'fotón',
-  virtual: 'electrón virtual',
-};
-
 export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function DiagramView(
   {
     diagram,
@@ -101,7 +95,7 @@ export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function 
       className={`diagram ${success ? 'is-success' : ''} ${compact ? 'is-compact' : ''} ${reveal ? 'is-playback' : ''}`}
       viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
       role="img"
-      aria-label={ariaLabel ?? 'Diagrama de Feynman'}
+      aria-label={ariaLabel ?? t.diagram.label}
       {...pointer}
     >
       <defs>
@@ -119,7 +113,7 @@ export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function 
         <g className="time-axis" aria-hidden>
           <line x1="30" y1="69.5" x2="70" y2="69.5" />
           <path d="M70,69.5 l-2,-1.3 v2.6 z" />
-          <text x="50" y="67.6">tiempo</text>
+          <text x="50" y="67.6">{t.diagram.time}</text>
         </g>
       )}
 
@@ -200,7 +194,7 @@ export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function 
           const a = nodes.get(e.from);
           const b = nodes.get(e.to);
           if (!a || !b) return null;
-          const name = SPECIES_NAME[edgeClass(diagram, e)];
+          const name = t.diagram.species[edgeClass(diagram, e) as keyof typeof t.diagram.species];
           return (
             <path
               key={`h-${e.id}`}
@@ -208,7 +202,7 @@ export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function 
               d={straightOrCurvedPath(a, b, e.bend)}
               role="button"
               tabIndex={0}
-              aria-label={`Línea: ${name} (${edgeLabel(diagram, e)})`}
+              aria-label={t.diagram.line(name, edgeLabel(diagram, e))}
               aria-pressed={selected?.has(e.id) ?? false}
               onClick={() => onTap?.(e.id, 'edge')}
               onKeyDown={(ev) => (ev.key === 'Enter' || ev.key === ' ') && (ev.preventDefault(), onTap?.(e.id, 'edge'))}
@@ -225,7 +219,7 @@ export const DiagramView = forwardRef<SVGSVGElement, DiagramViewProps>(function 
             r={5}
             role="button"
             tabIndex={0}
-            aria-label={n.kind === 'vertex' ? 'Vértice' : n.kind === 'in' ? 'Partícula inicial' : 'Partícula final'}
+            aria-label={n.kind === 'vertex' ? t.diagram.vertex : n.kind === 'in' ? t.diagram.initial : t.diagram.final}
             aria-pressed={selected?.has(n.id) ?? false}
             onClick={() => onTap?.(n.id, 'node')}
             onKeyDown={(ev) => (ev.key === 'Enter' || ev.key === ' ') && (ev.preventDefault(), onTap?.(n.id, 'node'))}

@@ -36,6 +36,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.content.BuildStep
 import dev.mmartos.feynmanquest.core.content.ChoiceStep
 import dev.mmartos.feynmanquest.core.content.Step
@@ -53,6 +56,7 @@ import dev.mmartos.feynmanquest.core.content.Tappable
 import dev.mmartos.feynmanquest.core.content.issueText
 import dev.mmartos.feynmanquest.core.engine.Diagram
 import dev.mmartos.feynmanquest.core.engine.validate
+import dev.mmartos.feynmanquest.ui.LocalLanguage
 import dev.mmartos.feynmanquest.ui.components.AppButton
 import dev.mmartos.feynmanquest.ui.components.ButtonStyle
 import dev.mmartos.feynmanquest.ui.components.FeedbackBanner
@@ -116,10 +120,11 @@ private fun TapPlayer(step: TapStep, solved: Boolean, onMistake: () -> Unit, onS
   var errors by remember { mutableStateOf(emptySet<String>()) }
   var notice by remember { mutableStateOf<Notice?>(null) }
   val targets = step.targets.toSet()
+  val res = LocalResources.current
 
   fun wrong(ids: List<String>, msg: String) {
     errors = ids.toSet()
-    notice = Notice("No es esa", msg, true)
+    notice = Notice(res.getString(R.string.step_wrong), msg, true)
     fb.sfx(Sfx.Error); fb.haptic(Haptic.Reject)
     onMistake()
   }
@@ -145,7 +150,7 @@ private fun TapPlayer(step: TapStep, solved: Boolean, onMistake: () -> Unit, onS
       return
     }
     if (step.targets.any { it !in selected }) {
-      notice = Notice("Te falta alguna", "Has encontrado ${selected.size} de ${step.targets.size}. Busca las que faltan.", true)
+      notice = Notice(res.getString(R.string.step_missing), res.getString(R.string.step_missing_body, selected.size, step.targets.size), true)
       fb.sfx(Sfx.Error); fb.haptic(Haptic.Reject)
       onMistake()
       return
@@ -160,7 +165,7 @@ private fun TapPlayer(step: TapStep, solved: Boolean, onMistake: () -> Unit, onS
         tappable = if (solved) Tappable.None else step.tappable,
         onTap = { id, _ -> onTap(id) },
         selected = if (solved) targets else selected, errors = errors, success = solved,
-        description = "Diagrama: toca el elemento que se pide",
+        description = stringResource(R.string.step_tap_diagram),
       )
       if (step.mode == TapMode.All && !solved) {
         Text(
@@ -172,10 +177,10 @@ private fun TapPlayer(step: TapStep, solved: Boolean, onMistake: () -> Unit, onS
   }
   NoticeSlot(notice)
   if (step.mode == TapMode.All && !solved) {
-    AppButton("Comprobar", ::check, Modifier.fillMaxWidth(), ButtonStyle.Primary, enabled = selected.isNotEmpty(), sound = null)
+    AppButton(stringResource(R.string.step_check), ::check, Modifier.fillMaxWidth(), ButtonStyle.Primary, enabled = selected.isNotEmpty(), sound = null)
   }
   if (step.mode == TapMode.Any && !solved) {
-    Text("Toca directamente sobre el diagrama.", Modifier.fillMaxWidth(), color = Cosmic.Text3, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+    Text(stringResource(R.string.step_tap_help), Modifier.fillMaxWidth(), color = Cosmic.Text3, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
   }
 }
 
@@ -187,6 +192,7 @@ private fun ChoicePlayer(step: ChoiceStep, solved: Boolean, onMistake: () -> Uni
   var wrongPicks by remember { mutableStateOf(emptySet<String>()) }
   var notice by remember { mutableStateOf<Notice?>(null) }
   val reduced = LocalReducedMotion.current
+  val res = LocalResources.current
 
   fun pick(id: String) {
     if (solved || id in wrongPicks) return
@@ -194,7 +200,7 @@ private fun ChoicePlayer(step: ChoiceStep, solved: Boolean, onMistake: () -> Uni
     if (o.correct) { notice = null; fb.sfx(Sfx.Select); onSolved(null) }
     else {
       wrongPicks = wrongPicks + id
-      notice = Notice("No exactamente", o.feedback ?: "Piénsalo otra vez.", true)
+      notice = Notice(res.getString(R.string.step_not_quite), o.feedback ?: res.getString(R.string.step_think_again), true)
       fb.sfx(Sfx.Error); fb.haptic(Haptic.Reject)
       onMistake()
     }
@@ -270,12 +276,14 @@ private fun BuildPlayer(step: BuildStep, solved: Boolean, onMistake: () -> Unit,
   var diagram by remember { mutableStateOf(step.diagram) }
   var errors by remember { mutableStateOf(emptySet<String>()) }
   var notice by remember { mutableStateOf<Notice?>(null) }
+  val language = LocalLanguage.current
+  val noticeTitle = stringResource(R.string.step_notice)
 
   fun check() {
     val r = validate(diagram, step.validation)
     if (r.ok) { errors = emptySet(); notice = null; onSolved(diagram); return }
     val first = r.issues.first()
-    val t = issueText(first)
+    val t = issueText(first, language)
     errors = r.issues.filter { it.layer == first.layer }.flatMap { it.elements }.toSet()
     notice = Notice(t.title, t.body, true)
     fb.sfx(Sfx.Error); fb.haptic(Haptic.Reject)
@@ -296,9 +304,9 @@ private fun BuildPlayer(step: BuildStep, solved: Boolean, onMistake: () -> Unit,
       diagram, onChange = { diagram = it; errors = emptySet(); notice = null },
       palette = step.palette, errors = errors, success = solved, disabled = solved,
       allowParallel = (step.validation.loops ?: 0) > 0,
-      onNotice = { notice = Notice("Ojo", it, false) },
+      onNotice = { notice = Notice(noticeTitle, it, false) },
     )
   }
   NoticeSlot(notice)
-  if (!solved) AppButton("Comprobar", ::check, Modifier.fillMaxWidth(), ButtonStyle.Primary, large = true, sound = null)
+  if (!solved) AppButton(stringResource(R.string.step_check), ::check, Modifier.fillMaxWidth(), ButtonStyle.Primary, large = true, sound = null)
 }

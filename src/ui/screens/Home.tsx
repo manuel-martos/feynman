@@ -6,6 +6,7 @@ import { Logo } from '../components/Logo';
 import { MechanicBadge } from '../components/MechanicBadge';
 import { DiagramView } from '../diagram/DiagramView';
 import { navigate } from '../router';
+import { t } from '../../i18n';
 
 const hero = plain(process('bhabha', 's'));
 
@@ -25,7 +26,7 @@ export function Home() {
           <h1 className="wordmark">
             Feynman <span>Quest</span>
           </h1>
-          <p className="tagline">Aprende el lenguaje del universo, una interacción cada vez.</p>
+          <p className="tagline">{t.home.tagline}</p>
         </div>
       </header>
 
@@ -36,25 +37,25 @@ export function Home() {
         {next ? (
           <>
             <span className="eyebrow">
-              {done === 0 ? 'Tu aventura empieza aquí' : `Capítulo ${chapter.id} · ${chapter.title}`}
+              {done === 0 ? t.home.firstTime : t.home.chapter(chapter.id, chapter.title)}
             </span>
             <h2>
-              Nivel {next.id}: {next.title}
+              {t.home.level(next.id, next.title)}
             </h2>
             <div className="hero-meta">
               <MechanicBadge mechanic={next.mechanic} />
-              <span>{next.steps.length} {next.steps.length === 1 ? 'reto' : 'retos'} · 2–5 min</span>
+              <span>{t.home.challenges(next.steps.length)}</span>
             </div>
             <button className="btn primary block lg" onClick={() => navigate({ name: 'level', id: next.id })}>
-              {done === 0 ? 'Empezar' : 'Continuar'}
+              {done === 0 ? t.home.start : t.home.resume}
             </button>
           </>
         ) : (
           <>
-            <span className="eyebrow">Campaña completada</span>
-            <h2>Hablas el lenguaje de Feynman</h2>
+            <span className="eyebrow">{t.home.campaignDone}</span>
+            <h2>{t.home.fluent}</h2>
             <button className="btn primary block lg" onClick={() => navigate({ name: 'practice' })}>
-              Entrenar en modo Dominio
+              {t.home.trainMastery}
             </button>
           </>
         )}
@@ -63,23 +64,23 @@ export function Home() {
       <section className="stats">
         <div className="stat">
           <strong>{stars}</strong>
-          <span>de {content.levels.length * 3} ★</span>
+          <span>{t.home.ofStars(content.levels.length * 3)}</span>
         </div>
         <div className="stat">
           <strong>{done}</strong>
-          <span>de {content.levels.length} niveles</span>
+          <span>{t.home.ofLevels(content.levels.length)}</span>
         </div>
         <div className="stat">
           <strong>{concepts.length}</strong>
-          <span>de {content.concepts.length} conceptos</span>
+          <span>{t.home.ofConcepts(content.concepts.length)}</span>
         </div>
       </section>
 
       <section className="card rank-card">
         <div className="rank-row">
           <div>
-            <span className="eyebrow">Rango</span>
-            <strong>{rank.title}</strong>
+            <span className="eyebrow">{t.home.rank}</span>
+            <strong>{t.ranks[rank.id]}</strong>
           </div>
           <span className="xp">{xp} XP</span>
         </div>
@@ -88,7 +89,7 @@ export function Home() {
         </div>
         {nextRank && (
           <small>
-            {nextRank.minXp - xp} XP para «{nextRank.title}»
+            {t.home.toNextRank(nextRank.minXp - xp, t.ranks[nextRank.id])}
           </small>
         )}
       </section>
@@ -98,8 +99,8 @@ export function Home() {
           ∞
         </span>
         <div>
-          <strong>Modo Dominio</strong>
-          <p>{mathUnlocked(progress) ? 'Repasa con diagramas nuevos generados al momento.' : 'Se desbloquea al completar el capítulo 1.'}</p>
+          <strong>{t.home.mastery}</strong>
+          <p>{mathUnlocked(progress) ? t.home.masteryOpen : t.home.masteryLocked}</p>
         </div>
         <span aria-hidden>{mathUnlocked(progress) ? '→' : '🔒'}</span>
       </button>

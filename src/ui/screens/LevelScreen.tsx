@@ -11,6 +11,7 @@ import { MechanicBadge } from '../components/MechanicBadge';
 import { Stars } from '../components/Stars';
 import { navigate } from '../router';
 import { StepPlayer } from '../StepPlayer';
+import { t } from '../../i18n';
 
 type Phase = 'intro' | 'play' | 'done';
 
@@ -21,9 +22,9 @@ export function LevelScreen({ id }: { id: number }) {
   if (!isLevelUnlocked(progress, id)) {
     return (
       <div className="screen center">
-        <p>Este nivel aún está bloqueado.</p>
+        <p>{t.level.locked}</p>
         <button className="btn primary" onClick={() => navigate({ name: 'map' })}>
-          Volver a la campaña
+          {t.level.backToCampaign}
         </button>
       </div>
     );
@@ -34,9 +35,9 @@ export function LevelScreen({ id }: { id: number }) {
 function NotFound() {
   return (
     <div className="screen center">
-      <p>Nivel no encontrado.</p>
+      <p>{t.level.notFound}</p>
       <a className="btn" href="#/map">
-        Campaña
+        {t.level.campaign}
       </a>
     </div>
   );
@@ -124,11 +125,11 @@ function LevelRun({ level }: { level: Level }) {
     return (
       <div className="screen level-intro" style={{ ['--chapter' as string]: chapter.color }}>
         <header className="topbar">
-          <button className="icon-btn" onClick={() => navigate({ name: 'map', chapter: level.chapter })} aria-label="Volver">
+          <button className="icon-btn" onClick={() => navigate({ name: 'map', chapter: level.chapter })} aria-label={t.level.back}>
             ←
           </button>
           <span className="topbar-title">
-            Capítulo {chapter.id} · Nivel {level.id}
+            {t.level.where(chapter.id, level.id)}
           </span>
           <span />
         </header>
@@ -143,13 +144,13 @@ function LevelRun({ level }: { level: Level }) {
           <p className="intro-text">{level.intro}</p>
           {prevBest > 0 && (
             <div className="intro-best">
-              Mejor resultado: <Stars value={prevBest} />
+              {t.level.best} <Stars value={prevBest} />
             </div>
           )}
         </div>
         <div className="sticky-actions">
           <button className="btn primary block lg" onClick={begin} autoFocus>
-            {prevBest > 0 ? 'Jugar de nuevo' : 'Empezar'}
+            {prevBest > 0 ? t.level.playAgain : t.level.start}
           </button>
         </div>
       </div>
@@ -163,7 +164,7 @@ function LevelRun({ level }: { level: Level }) {
   return (
     <div className="screen level-play" style={{ ['--chapter' as string]: chapter.color }}>
       <header className="topbar">
-        <button className="icon-btn" onClick={() => navigate({ name: 'map', chapter: level.chapter })} aria-label="Salir del nivel">
+        <button className="icon-btn" onClick={() => navigate({ name: 'map', chapter: level.chapter })} aria-label={t.level.exit}>
           ✕
         </button>
         <div className="step-progress" role="progressbar" aria-valuemin={0} aria-valuemax={level.steps.length} aria-valuenow={stepIdx + (solved ? 1 : 0)}>
@@ -171,7 +172,7 @@ function LevelRun({ level }: { level: Level }) {
             <span key={s.id} className={i < stepIdx || (i === stepIdx && solved) ? 'done' : i === stepIdx ? 'current' : ''} />
           ))}
         </div>
-        <button className={`icon-btn hint-btn ${hintTier > 0 ? 'used' : ''}`} onClick={revealHint} disabled={solved} aria-label="Pista">
+        <button className={`icon-btn hint-btn ${hintTier > 0 ? 'used' : ''}`} onClick={revealHint} disabled={solved} aria-label={t.level.hint}>
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
             <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2V17h5v-1.2c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z" />
           </svg>
@@ -190,15 +191,15 @@ function LevelRun({ level }: { level: Level }) {
             💡
           </span>
           <div>
-            <strong>{hintTier === 1 ? 'Pista' : 'La regla'}</strong>
+            <strong>{hintTier === 1 ? t.level.hint : t.level.rule}</strong>
             <p>{step.hints[hintTier - 1]}</p>
             {hintTier === 1 && (
               <button className="link" onClick={revealHint}>
-                Necesito más ayuda
+                {t.level.moreHelp}
               </button>
             )}
           </div>
-          <button className="icon-btn sm" onClick={() => setShowHint(false)} aria-label="Cerrar pista">
+          <button className="icon-btn sm" onClick={() => setShowHint(false)} aria-label={t.level.closeHint}>
             ✕
           </button>
         </div>
@@ -216,12 +217,12 @@ function LevelRun({ level }: { level: Level }) {
                 ✓
               </span>
               <div>
-                <strong>{isLast ? '¡Nivel superado!' : '¡Correcto!'}</strong>
+                <strong>{isLast ? t.level.levelPassed : t.level.correct}</strong>
                 {step.solved && <p>{step.solved}</p>}
               </div>
             </div>
             <button className="btn success block lg" onClick={next} autoFocus>
-              {isLast ? 'Ver resultado' : 'Continuar'}
+              {isLast ? t.level.seeResult : t.level.next}
             </button>
           </div>
         </div>
@@ -266,9 +267,9 @@ function LevelDone({
           ))}
         </div>
         <Stars value={result.stars} size={48} animate />
-        <h1>{!nextLevel ? '¡Campaña completada!' : starsTitle(result.stars)}</h1>
+        <h1>{!nextLevel ? t.done.campaignDone : starsTitle(result.stars)}</h1>
         <p className="done-sub">
-          {mistakes === 0 ? 'Sin errores' : `${mistakes} ${mistakes === 1 ? 'error' : 'errores'}`} · {hints === 0 ? 'sin pistas' : `${hints} ${hints === 1 ? 'pista' : 'pistas'}`}
+          {t.done.mistakes(mistakes)} · {t.done.hints(hints)}
           {result.xp > 0 && <span className="xp-chip">+{result.xp} XP</span>}
         </p>
       </div>
@@ -283,13 +284,13 @@ function LevelDone({
       </section>
 
       <section className="card">
-        <h3 className="card-title">Comprende</h3>
+        <h3 className="card-title">{t.done.understand}</h3>
         <Explanation ex={level.explanation} mathUnlocked={mathUnlocked(progress)} onView={onLayer} />
       </section>
 
       {result.newConcepts.length > 0 && (
         <section className="card new-concepts">
-          <h3 className="card-title">Nuevo en tu colección</h3>
+          <h3 className="card-title">{t.done.newInCollection}</h3>
           <div className="concept-chips">
             {result.newConcepts.map((c) => (
               <a key={c} className="concept-chip" href="#/library">
@@ -302,26 +303,26 @@ function LevelDone({
 
       {nextChapter && (
         <section className="card unlock-card" style={{ ['--chapter' as string]: nextChapter.color }}>
-          <span className="unlock-label">Capítulo desbloqueado</span>
+          <span className="unlock-label">{t.done.chapterUnlocked}</span>
           <strong>
             {nextChapter.id}. {nextChapter.title}
           </strong>
           <p>{nextChapter.goals}</p>
         </section>
       )}
-      {level.id === 5 && <p className="unlock-note">🔓 Has desbloqueado la capa de explicación matemática.</p>}
+      {level.id === 5 && <p className="unlock-note">{t.done.mathUnlocked}</p>}
 
       <div className="sticky-actions two">
         <button className="btn ghost" onClick={() => navigate({ name: 'map', chapter: level.chapter })}>
-          Campaña
+          {t.done.campaign}
         </button>
         {nextLevel ? (
           <button className="btn primary lg" onClick={() => navigate({ name: 'level', id: nextLevel.id })} autoFocus>
-            Siguiente nivel →
+            {t.done.nextLevel}
           </button>
         ) : (
           <button className="btn primary lg" onClick={() => navigate({ name: 'practice' })}>
-            Modo Dominio →
+            {t.done.mastery}
           </button>
         )}
       </div>
@@ -330,5 +331,5 @@ function LevelDone({
 }
 
 function starsTitle(s: number) {
-  return s === 3 ? '¡Perfecto!' : s === 2 ? '¡Muy bien!' : '¡Superado!';
+  return s === 3 ? t.done.perfect : s === 2 ? t.done.great : t.done.passed;
 }

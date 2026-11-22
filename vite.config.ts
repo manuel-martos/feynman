@@ -16,8 +16,8 @@ export default defineConfig({
       manifest: {
         name: 'Feynman Quest',
         short_name: 'Feynman Quest',
-        description: 'Aprende el lenguaje del universo, una interacción cada vez.',
-        lang: 'es',
+        description: 'Learn the language of the universe, one interaction at a time.',
+        lang: 'en',
         theme_color: '#070a1a',
         background_color: '#070a1a',
         display: 'standalone',

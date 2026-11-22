@@ -3,6 +3,7 @@ package dev.mmartos.feynmanquest.core
 import dev.mmartos.feynmanquest.core.content.Caption
 import dev.mmartos.feynmanquest.core.content.Content
 import dev.mmartos.feynmanquest.core.content.IssueText
+import dev.mmartos.feynmanquest.core.content.Language
 import dev.mmartos.feynmanquest.core.content.issueText
 import dev.mmartos.feynmanquest.core.content.narrate
 import dev.mmartos.feynmanquest.core.engine.Diagram
@@ -39,8 +40,8 @@ import org.junit.Test
 /**
  * Parity with the TypeScript engine: every case in shared/engine-cases.json was
  * computed by the web engine (scripts/export-shared.ts). The Kotlin port must
- * reproduce validation issues (codes, elements, data and messages), topology,
- * loops, labels, the time ordering and the narration exactly.
+ * reproduce validation issues (codes, elements, data and messages in every
+ * language), topology, loops, labels, the time ordering and the narration exactly.
  */
 class GoldenCasesTest {
   private val json = Content.json
@@ -71,7 +72,9 @@ class GoldenCasesTest {
         val tag = "validate(${vo.getValue("options").toString().take(60)})"
         check("$tag.ok", vo.getValue("ok"), JsonPrimitive(r.ok))
         check("$tag.issues", vo.getValue("issues"), encode(ListSerializer(Issue.serializer()), r.issues))
-        check("$tag.texts", vo.getValue("texts"), encode(ListSerializer(IssueText.serializer()), r.issues.map(::issueText)))
+        for (lang in Language.entries) {
+          check("$tag.texts.${lang.id}", vo.getValue("texts").jsonObject.getValue(lang.id), encode(ListSerializer(IssueText.serializer()), r.issues.map { issueText(it, lang) }))
+        }
       }
       check("topology", o.getValue("topology"), JsonPrimitive(topologySignature(d)))
       check("channel", o.getValue("channel"), channelOf(d)?.let { JsonPrimitive(it.id) } ?: JsonNull)
@@ -95,8 +98,10 @@ class GoldenCasesTest {
       check("events", t.getValue("events"), events)
       val narration = t.getValue("narration")
       if (narration !is JsonNull) {
-        val captions = (0 until tl.events.size + 2).map { narrate(tl, it) }
-        check("narration", narration, encode(ListSerializer(Caption.serializer()), captions))
+        for (lang in Language.entries) {
+          val captions = (0 until tl.events.size + 2).map { narrate(tl, it, lang) }
+          check("narration.${lang.id}", narration.jsonObject.getValue(lang.id), encode(ListSerializer(Caption.serializer()), captions))
+        }
       }
     }
     assertTrue("${failures.size} of $checks checks differ:\n" + failures.take(15).joinToString("\n"), failures.isEmpty())
@@ -121,6 +126,15 @@ class GoldenCasesTest {
     assertEquals(listOf(5, 5, 6, 4, 4, 4, 6), content.chapters.map { ch -> content.levelsOf(ch.id).size })
     assertEquals(0, content.scoring.ranks.first().minXp)
     assertTrue(content.levels.all { l -> l.concepts.all { it in content.conceptById } })
+    // Every translation has exactly the structure of the Spanish source.
+    for (lang in Language.entries) {
+      val t = Content.parse(File(shared, "content/${lang.id}.json").readText())
+      assertEquals(lang, t.language)
+      assertEquals(content.levels.map { l -> l.id to l.steps.map { it.id } }, t.levels.map { l -> l.id to l.steps.map { it.id } })
+      assertEquals(content.concepts.map { it.id }, t.concepts.map { it.id })
+      assertEquals(content.scoring.ranks.map { it.id to it.minXp }, t.scoring.ranks.map { it.id to it.minXp })
+      assertEquals(content.practice.processes.keys, t.practice.processes.keys)
+    }
     // Sanity: an int field parsed from the content survives.
     assertEquals(1, root.getValue("cases").jsonArray.first().jsonObject.getValue("order").jsonPrimitive.int.coerceAtMost(1))
   }
