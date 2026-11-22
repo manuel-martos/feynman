@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.mmartos.feynmanquest.core.content.Content
+import dev.mmartos.feynmanquest.core.content.Language
 import dev.mmartos.feynmanquest.core.game.GameState
 import dev.mmartos.feynmanquest.core.game.Layer
 import dev.mmartos.feynmanquest.core.game.Settings
@@ -17,10 +18,10 @@ import kotlinx.coroutines.launch
 /** App-wide state: content plus the persisted progress, and the actions on it. */
 @HiltViewModel
 class AppViewModel @Inject constructor(
-  contentRepository: ContentRepository,
+  private val contentRepository: ContentRepository,
   private val game: GameRepository,
 ) : ViewModel() {
-  val content: Content = contentRepository.content
+  fun content(language: Language): Content = contentRepository.content(language)
   val state: StateFlow<GameState?> = game.state
 
   fun finishOnboarding() = viewModelScope.launch { game.finishOnboarding() }

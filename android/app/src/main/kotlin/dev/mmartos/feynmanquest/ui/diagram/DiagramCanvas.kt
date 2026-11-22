@@ -1,5 +1,6 @@
 package dev.mmartos.feynmanquest.ui.diagram
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -34,6 +35,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
@@ -48,6 +51,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.content.Tappable
 import dev.mmartos.feynmanquest.core.engine.Diagram
 import dev.mmartos.feynmanquest.core.engine.DiagramEdge
@@ -64,11 +68,11 @@ import dev.mmartos.feynmanquest.ui.theme.LocalReducedMotion
 import dev.mmartos.feynmanquest.ui.theme.SpaceGrotesk
 
 /** Visual class of a line: what particle it shows. */
-enum class EdgeKind(val color: Color, val spoken: String) {
-  Electron(Cosmic.Electron, "electrón"),
-  Positron(Cosmic.Positron, "positrón"),
-  Photon(Cosmic.Photon, "fotón"),
-  Virtual(Cosmic.Virtual, "electrón virtual"),
+enum class EdgeKind(val color: Color, @StringRes val spoken: Int) {
+  Electron(Cosmic.Electron, R.string.species_electron),
+  Positron(Cosmic.Positron, R.string.species_positron),
+  Photon(Cosmic.Photon, R.string.species_photon),
+  Virtual(Cosmic.Virtual, R.string.species_virtual),
 }
 
 fun Diagram.edgeKind(e: DiagramEdge): EdgeKind {
@@ -141,7 +145,7 @@ fun DiagramCanvas(
   pendingNodes: Set<String> = emptySet(),
   tappable: Tappable = Tappable.None,
   onTap: ((id: String, isNode: Boolean) -> Unit)? = null,
-  description: String = "Diagrama de Feynman",
+  description: String = stringResource(R.string.diagram_description),
   overlay: (DrawScope.() -> Unit)? = null,
 ) {
   val reduced = LocalReducedMotion.current
@@ -149,6 +153,8 @@ fun DiagramCanvas(
   val measurer = rememberTextMeasurer(cacheSize = 32)
   val nodes = remember(diagram) { diagram.nodeMap() }
 
+  val res = LocalResources.current
+  val timeLabel = stringResource(R.string.diagram_time)
   val infinite = rememberInfiniteTransition(label = "diagram")
   val flow = if (animate) infinite.animateFloat(0f, 1f, infiniteRepeatable(tween(1800, easing = LinearEasing)), label = "flow")
   else remember { mutableFloatStateOf(0f) }
@@ -182,11 +188,11 @@ fun DiagramCanvas(
       .semantics {
         customActions = buildList {
           if (tappable == Tappable.Edges || tappable == Tappable.All) diagram.edges.forEach { e ->
-            add(CustomAccessibilityAction("Línea: ${diagram.edgeKind(e).spoken} (${diagram.edgeLabel(e)})") { onTapState.value?.invoke(e.id, false); true })
+            add(CustomAccessibilityAction(res.getString(R.string.diagram_line, res.getString(diagram.edgeKind(e).spoken), diagram.edgeLabel(e))) { onTapState.value?.invoke(e.id, false); true })
           }
           if (tappable == Tappable.Nodes || tappable == Tappable.All) diagram.nodes.forEach { n ->
-            val name = when (n.kind) { NodeKind.Vertex -> "Vértice"; NodeKind.In -> "Partícula inicial"; NodeKind.Out -> "Partícula final" }
-            add(CustomAccessibilityAction("$name ${n.tag ?: n.id}") { onTapState.value?.invoke(n.id, true); true })
+            val name = when (n.kind) { NodeKind.Vertex -> R.string.diagram_vertex; NodeKind.In -> R.string.diagram_initial; NodeKind.Out -> R.string.diagram_final }
+            add(CustomAccessibilityAction(res.getString(name, n.tag ?: n.id)) { onTapState.value?.invoke(n.id, true); true })
           }
         }
       }
@@ -204,7 +210,7 @@ fun DiagramCanvas(
       drawDiagram(
         diagram, nodes, s, measurer, anim, animate,
         selected, errors, focus, successT.value, success, showLabels, showTags, compact, showTimeAxis,
-        snapNode, activeNode, socketHints, reveal, pendingNodes,
+        snapNode, activeNode, socketHints, reveal, pendingNodes, timeLabel,
       )
       if (overlay != null) scale(s, s, pivot = Offset.Zero) { overlay() }
     }
@@ -232,6 +238,7 @@ private fun DrawScope.drawDiagram(
   socketHints: Boolean,
   reveal: Map<String, Reveal>?,
   pendingNodes: Set<String>,
+  timeLabel: String,
 ) {
   fun dimmed(id: String) = focus != null && id !in focus
   val degree = HashMap<String, Int>().apply { diagram.edges.forEach { e -> merge(e.from, 1, Int::plus); merge(e.to, 1, Int::plus) } }
@@ -242,7 +249,7 @@ private fun DrawScope.drawDiagram(
       drawLine(Cosmic.Text3, Offset(30f, 69.5f), Offset(70f, 69.5f), 0.3f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.8f, 1f)))
       drawPath(Path().apply { moveTo(70f, 69.5f); lineTo(68f, 68.2f); lineTo(68f, 70.8f); close() }, Cosmic.Text3)
     }
-    drawLabel(measurer, "TIEMPO", Offset(50f, 67.6f) * s, 2.3f * s, Cosmic.Text3, Inter, FontWeight.Medium, Anchor.Middle, letterSpacing = 0.3f * s)
+    drawLabel(measurer, timeLabel, Offset(50f, 67.6f) * s, 2.3f * s, Cosmic.Text3, Inter, FontWeight.Medium, Anchor.Middle, letterSpacing = 0.3f * s)
   }
 
   // ---- edges ----

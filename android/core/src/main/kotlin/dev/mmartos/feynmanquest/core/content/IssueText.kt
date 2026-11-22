@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
 
-/** Pedagogical message for a validation issue (Spanish). Port of src/content/es/issues.ts. */
+/** Pedagogical message for a validation issue. Ports of src/content/{es,ca,en}/issues.ts. */
 @Serializable
 data class IssueText(val title: String, val body: String)
 
@@ -18,10 +18,16 @@ private val CHANNEL = mapOf(
   "?" to "otro tipo",
 )
 
-private fun Issue.str(key: String): String = data?.get(key)?.content ?: "undefined"
-private fun Issue.int(key: String): Int? = (data?.get(key) as JsonPrimitive?)?.intOrNull
+internal fun Issue.str(key: String): String = data?.get(key)?.content ?: "undefined"
+internal fun Issue.int(key: String): Int? = (data?.get(key) as JsonPrimitive?)?.intOrNull
 
-fun issueText(i: Issue): IssueText = when (i.code) {
+fun issueText(i: Issue, language: Language): IssueText = when (language) {
+  Language.Es -> issueTextEs(i)
+  Language.Ca -> issueTextCa(i)
+  Language.En -> issueTextEn(i)
+}
+
+private fun issueTextEs(i: Issue): IssueText = when (i.code) {
   IssueCode.EXTERNAL_UNCONNECTED -> IssueText(
     "Falta una conexión",
     "Hay una partícula externa sin línea. Todas las partículas que entran y salen deben participar en el diagrama.",

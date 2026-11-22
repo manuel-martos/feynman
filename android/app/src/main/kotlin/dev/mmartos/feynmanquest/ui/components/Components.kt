@@ -1,5 +1,6 @@
 package dev.mmartos.feynmanquest.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -55,6 +56,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -67,6 +69,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.sp
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.content.Explanation
 import dev.mmartos.feynmanquest.core.content.Mechanic
 import dev.mmartos.feynmanquest.core.game.Layer
@@ -260,13 +263,14 @@ fun Star(filled: Boolean, size: Dp, modifier: Modifier = Modifier, popDelayMs: I
 
 @Composable
 fun Stars(value: Int, modifier: Modifier = Modifier, size: Dp = 16.dp, animate: Boolean = false) {
-  Row(modifier.semantics { contentDescription = "$value de 3 estrellas" }, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+  val starsLabel = stringResource(R.string.stars_of_three, value)
+  Row(modifier.semantics { contentDescription = starsLabel }, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
     repeat(3) { i -> Star(i < value, size, popDelayMs = if (animate) 350 + i * 260 else null) }
   }
 }
 
 val Mechanic.label get() = when (this) { Mechanic.Decode -> "Decode"; Mechanic.Build -> "Build"; Mechanic.Debug -> "Debug" }
-val Mechanic.hint get() = when (this) { Mechanic.Decode -> "Descifra el diagrama"; Mechanic.Build -> "Construye la interacción"; Mechanic.Debug -> "Encuentra el error" }
+@get:StringRes val Mechanic.hint get() = when (this) { Mechanic.Decode -> R.string.mechanic_decode; Mechanic.Build -> R.string.mechanic_build; Mechanic.Debug -> R.string.mechanic_debug }
 val Mechanic.icon get() = when (this) { Mechanic.Decode -> "◉"; Mechanic.Build -> "✦"; Mechanic.Debug -> "⚠" }
 val Mechanic.color get() = when (this) { Mechanic.Decode -> Cosmic.Electron; Mechanic.Build -> Cosmic.Photon; Mechanic.Debug -> Cosmic.Positron }
 
@@ -289,13 +293,13 @@ fun Badge(text: String, color: Color, modifier: Modifier = Modifier, icon: Strin
 
 @Composable
 fun MechanicBadge(mechanic: Mechanic, modifier: Modifier = Modifier, long: Boolean = false) =
-  Badge(mechanic.label, mechanic.color, modifier, icon = mechanic.icon, sub = if (long) mechanic.hint else null)
+  Badge(mechanic.label, mechanic.color, modifier, icon = mechanic.icon, sub = if (long) stringResource(mechanic.hint) else null)
 
-private data class Tab(val layer: Layer, val label: String, val q: String)
+private data class Tab(val layer: Layer, @StringRes val label: Int, @StringRes val q: Int)
 private val TABS = listOf(
-  Tab(Layer.Intuitive, "Intuitiva", "¿Qué estoy viendo?"),
-  Tab(Layer.Scientific, "Científica", "¿Qué significa físicamente?"),
-  Tab(Layer.Math, "Matemática", "¿Cómo se expresa matemáticamente?"),
+  Tab(Layer.Intuitive, R.string.tab_intuitive, R.string.tab_intuitive_q),
+  Tab(Layer.Scientific, R.string.tab_scientific, R.string.tab_scientific_q),
+  Tab(Layer.Math, R.string.tab_math, R.string.tab_math_q),
 )
 
 /** Three-layer explanation (intuitive / scientific / mathematical). */
@@ -322,7 +326,7 @@ fun ExplanationTabs(ex: Explanation, mathUnlocked: Boolean, onView: (Layer) -> U
           contentAlignment = Alignment.Center,
         ) {
           Text(
-            t.label,
+            stringResource(t.label),
             color = if (active) Cosmic.Text else Cosmic.Text2,
             style = MaterialTheme.typography.labelMedium,
             maxLines = 1,
@@ -333,7 +337,7 @@ fun ExplanationTabs(ex: Explanation, mathUnlocked: Boolean, onView: (Layer) -> U
     AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { layer ->
       val t = TABS.first { it.layer == layer }
       Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(t.q, color = Cosmic.Accent2, style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(t.q), color = Cosmic.Accent2, style = MaterialTheme.typography.titleSmall)
         Text(
           when (layer) { Layer.Intuitive -> ex.intuitive; Layer.Scientific -> ex.scientific; Layer.Math -> ex.math },
           color = Cosmic.Text, style = MaterialTheme.typography.bodyLarge,

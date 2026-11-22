@@ -3,6 +3,7 @@ import { content } from '../../content';
 import { isLevelUnlocked, useGame } from '../../game/store';
 import { Stars } from '../components/Stars';
 import { navigate } from '../router';
+import { t } from '../../i18n';
 
 const MECH_ICON = { decode: '◉', build: '✦', debug: '⚠' } as const;
 const OFFSETS = [0, 34, 52, 34, 0, -34, -52, -34];
@@ -19,9 +20,9 @@ export function MapScreen({ chapter: focus }: { chapter?: number }) {
   return (
     <div className="screen map with-nav">
       <header className="page-head">
-        <h1>Campaña</h1>
+        <h1>{t.map.title}</h1>
         <p>
-          {content.levels.length} niveles · {content.chapters.length} capítulos
+          {t.map.summary(content.levels.length, content.chapters.length)}
         </p>
       </header>
       {content.chapters.map((ch) => {
@@ -35,7 +36,7 @@ export function MapScreen({ chapter: focus }: { chapter?: number }) {
               <span className="chapter-num">{ch.id}</span>
               <div>
                 <h2>{ch.title}</h2>
-                <p>{unlocked ? ch.goals : 'Completa el capítulo anterior para desbloquearlo.'}</p>
+                <p>{unlocked ? ch.goals : t.map.chapterLocked}</p>
               </div>
             </div>
             <div className="chapter-meta">
@@ -57,7 +58,7 @@ export function MapScreen({ chapter: focus }: { chapter?: number }) {
                       className={`level-node ${p ? 'is-done' : ''} ${isCurrent ? 'is-current' : ''} ${open ? '' : 'is-locked'}`}
                       disabled={!open}
                       onClick={() => navigate({ name: 'level', id: l.id })}
-                      aria-label={`Nivel ${l.id}: ${l.title}${p ? `, ${p.stars} estrellas` : open ? '' : ', bloqueado'}`}
+                      aria-label={t.map.levelAria(l.id, l.title, p?.stars, open)}
                       style={{ animationDelay: `${i * 50}ms` }}
                     >
                       <span className="level-num">{open ? l.id : '🔒'}</span>
@@ -68,7 +69,7 @@ export function MapScreen({ chapter: focus }: { chapter?: number }) {
                     <div className="level-caption">
                       <span>{l.title}</span>
                       {p && <Stars value={p.stars} size={12} />}
-                      {isCurrent && <em>Siguiente</em>}
+                      {isCurrent && <em>{t.map.next}</em>}
                     </div>
                   </li>
                 );

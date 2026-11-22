@@ -45,6 +45,10 @@ android {
       isIncludeAndroidResources = true
     }
   }
+  bundle {
+    // The language can be changed inside the app, so every install needs all three languages.
+    language { enableSplit = false }
+  }
   packaging {
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"

@@ -5,6 +5,7 @@ import { useGame } from '../../game/store';
 import { sfx } from '../audio';
 import { DiagramView } from './DiagramView';
 import { controlPoint, quadAt } from './geometry';
+import { t } from '../../i18n';
 
 /** Milliseconds to advance one step in time, and pause at each vertex. */
 const TRAVEL_MS = 900;
@@ -147,26 +148,26 @@ export function DiagramPlayback({ diagram, autoPlay = false, showLabels = true }
       />
       <div className="playback-caption" aria-live="polite">
         {idle ? (
-          <p className="playback-hint">Pulsa ▶ para leer el diagrama como una historia en el tiempo.</p>
+          <p className="playback-hint">{t.playback.hint}</p>
         ) : (
           <div key={caption.title} className="caption-in">
             <strong>{caption.title}</strong>
             <p>{caption.text}</p>
             {caption.charge && (
               <span className="charge-chip">
-                Carga: {caption.charge} <b aria-label="se conserva">✓</b>
+                {t.playback.charge} {caption.charge} <b aria-label={t.playback.conserved}>✓</b>
               </span>
             )}
           </div>
         )}
       </div>
       <div className="playback-bar">
-        <button className="icon-btn" onClick={() => go(Math.ceil(tau - 1e-6) - 1)} disabled={target <= 0} aria-label="Paso anterior">
+        <button className="icon-btn" onClick={() => go(Math.ceil(tau - 1e-6) - 1)} disabled={target <= 0} aria-label={t.playback.prev}>
           <svg viewBox="0 0 24 24" aria-hidden>
             <path d="M15 6l-6 6 6 6" />
           </svg>
         </button>
-        <button className="btn primary play-btn" onClick={toggle} aria-label={playing ? 'Pausa' : 'Reproducir en el tiempo'}>
+        <button className="btn primary play-btn" onClick={toggle} aria-label={playing ? t.playback.pause : t.playback.play}>
           {playing ? (
             <svg viewBox="0 0 24 24" aria-hidden>
               <path d="M8 5v14M16 5v14" />
@@ -176,9 +177,9 @@ export function DiagramPlayback({ diagram, autoPlay = false, showLabels = true }
               <path className="fill" d="M7 4.5v15l12-7.5z" />
             </svg>
           )}
-          <span>{playing ? 'Pausa' : tau >= steps ? 'Ver en el tiempo' : 'Seguir'}</span>
+          <span>{playing ? t.playback.pause : tau >= steps ? t.playback.watch : t.playback.resume}</span>
         </button>
-        <button className="icon-btn" onClick={() => go(Math.floor(tau + 1e-6) + 1)} disabled={target >= steps} aria-label="Paso siguiente">
+        <button className="icon-btn" onClick={() => go(Math.floor(tau + 1e-6) + 1)} disabled={target >= steps} aria-label={t.playback.next}>
           <svg viewBox="0 0 24 24" aria-hidden>
             <path d="M9 6l6 6-6 6" />
           </svg>

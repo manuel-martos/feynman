@@ -1,5 +1,6 @@
 package dev.mmartos.feynmanquest.ui.screens
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -43,11 +44,13 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.content.Content
 import dev.mmartos.feynmanquest.ui.components.AppButton
 import dev.mmartos.feynmanquest.ui.components.ButtonStyle
@@ -57,12 +60,12 @@ import dev.mmartos.feynmanquest.ui.feedback.Sfx
 import dev.mmartos.feynmanquest.ui.theme.Cosmic
 import dev.mmartos.feynmanquest.ui.theme.SpaceGrotesk
 
-private data class Slide(val title: String, val body: String)
+private data class Slide(@StringRes val title: Int, @StringRes val body: Int)
 
 private val SLIDES = listOf(
-  Slide("El universo tiene un idioma", "Richard Feynman inventó una forma de dibujar cómo interactúan las partículas. Con estos dibujos los físicos calculan desde el color del cielo hasta lo que ocurre en el CERN."),
-  Slide("Tres letras para empezar", "Cada línea es una partícula. El tiempo avanza de izquierda a derecha."),
-  Slide("Aprende haciendo", "Descifra diagramas, constrúyelos con tus manos y caza errores. Cada reto dura entre 2 y 5 minutos, y la física te explica por qué tu solución funciona."),
+  Slide(R.string.onb_title_1, R.string.onb_body_1),
+  Slide(R.string.onb_title_2, R.string.onb_body_2),
+  Slide(R.string.onb_title_3, R.string.onb_body_3),
 )
 
 @Composable
@@ -74,7 +77,7 @@ fun OnboardingScreen(content: Content, onSkip: () -> Unit, onDone: () -> Unit) {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Logo(36.dp)
         Spacer(Modifier.weight(1f))
-        Text("Saltar", color = Cosmic.Accent2, style = MaterialTheme.typography.labelLarge, modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onSkip).padding(8.dp))
+        Text(stringResource(R.string.onb_skip), color = Cosmic.Accent2, style = MaterialTheme.typography.labelLarge, modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onSkip).padding(8.dp))
       }
       AnimatedContent(
         i, Modifier.weight(1f),
@@ -85,12 +88,12 @@ fun OnboardingScreen(content: Content, onSkip: () -> Unit, onDone: () -> Unit) {
           when (k) {
             0 -> DiagramCanvas(content.art.onboarding, Modifier.fillMaxWidth().padding(bottom = 24.dp), showLabels = false)
             1 -> Column(Modifier.padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-              Legend(Cosmic.Electron, "Electrón e⁻", "Recta, flecha a favor del tiempo", Legend.Forward)
-              Legend(Cosmic.Positron, "Positrón e⁺", "Recta, flecha contra el tiempo", Legend.Backward)
-              Legend(Cosmic.Photon, "Fotón γ", "Ondulada: la partícula de la luz", Legend.Wave)
+              Legend(Cosmic.Electron, stringResource(R.string.onb_electron), stringResource(R.string.onb_electron_desc), Legend.Forward)
+              Legend(Cosmic.Positron, stringResource(R.string.onb_positron), stringResource(R.string.onb_positron_desc), Legend.Backward)
+              Legend(Cosmic.Photon, stringResource(R.string.onb_photon), stringResource(R.string.onb_photon_desc), Legend.Wave)
             }
             else -> Column(Modifier.padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-              listOf("Observa", "Experimenta", "Comprende", "Progresa").forEachIndexed { n, w ->
+              listOf(R.string.onb_observe, R.string.onb_experiment, R.string.onb_understand, R.string.onb_progress).map { stringResource(it) }.forEachIndexed { n, w ->
                 Row(
                   Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Cosmic.Surface).border(1.dp, Cosmic.Border, RoundedCornerShape(16.dp)).padding(12.dp),
                   verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -103,8 +106,8 @@ fun OnboardingScreen(content: Content, onSkip: () -> Unit, onDone: () -> Unit) {
               }
             }
           }
-          Text(SLIDES[k].title, style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
-          Text(SLIDES[k].body, style = MaterialTheme.typography.bodyLarge, color = Cosmic.Text2, modifier = Modifier.padding(top = 10.dp))
+          Text(stringResource(SLIDES[k].title), style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
+          Text(stringResource(SLIDES[k].body), style = MaterialTheme.typography.bodyLarge, color = Cosmic.Text2, modifier = Modifier.padding(top = 10.dp))
         }
       }
       Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
@@ -114,7 +117,7 @@ fun OnboardingScreen(content: Content, onSkip: () -> Unit, onDone: () -> Unit) {
         }
       }
       AppButton(
-        if (last) "Empezar el nivel 1" else "Siguiente",
+        stringResource(if (last) R.string.onb_start_level_1 else R.string.onb_next),
         { if (last) onDone() else i++ },
         Modifier.fillMaxWidth(), ButtonStyle.Primary, large = true, sound = if (last) Sfx.Unlock else Sfx.Tap,
       )

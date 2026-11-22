@@ -1,12 +1,16 @@
 package dev.mmartos.feynmanquest.core
 
+import dev.mmartos.feynmanquest.core.content.Content
+import dev.mmartos.feynmanquest.core.content.Language
 import dev.mmartos.feynmanquest.core.content.Rank
 import dev.mmartos.feynmanquest.core.content.Scoring
+import dev.mmartos.feynmanquest.core.content.issueText
 import dev.mmartos.feynmanquest.core.game.GameState
 import dev.mmartos.feynmanquest.core.game.PracticeGenerator
 import dev.mmartos.feynmanquest.core.game.completeLevel
 import dev.mmartos.feynmanquest.core.game.rankFor
 import dev.mmartos.feynmanquest.core.game.starsFor
+import java.io.File
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -14,7 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GameStateTest {
-  private val scoring = Scoring(50, 25, listOf(Rank("Curioso", 0), Rank("Aprendiz cuántico", 300)))
+  private val scoring = Scoring(50, 25, listOf(Rank("curious", "Curioso", 0), Rank("apprentice", "Aprendiz cuántico", 300)))
 
   @Test fun stars() {
     assertEquals(3, starsFor(0, 0))
@@ -40,13 +44,16 @@ class GameStateTest {
     assertEquals(1f, scoring.rankFor(5000).progress)
   }
 
-  @Test fun practiceSessionsAreWellFormed() {
-    val gen = PracticeGenerator(Random(7))
+  @Test fun practiceSessionsAreWellFormed() = Language.entries.forEach { lang ->
+    val shared = File(System.getProperty("shared.dir") ?: "../../shared")
+    val text = Content.parse(File(shared, "content/${lang.id}.json").readText()).practice
+    val gen = PracticeGenerator(text, { issueText(it, lang).body }, Random(7))
     repeat(50) { i ->
       val steps = gen.session(i)
       assertEquals(6, steps.size)
       steps.filterIsInstance<dev.mmartos.feynmanquest.core.content.ChoiceStep>().forEach { s -> assertEquals(1, s.options.count { it.correct }) }
       steps.filterIsInstance<dev.mmartos.feynmanquest.core.content.TapStep>().forEach { s -> assertTrue(s.targets.all { t -> s.diagram.edges.any { it.id == t } }) }
+      assertTrue(steps.all { it.prompt.isNotBlank() && it.hints.size == 2 })
     }
   }
 }

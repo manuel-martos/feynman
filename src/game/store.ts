@@ -28,7 +28,11 @@ export interface Settings {
   sound: boolean;
   haptics: boolean;
   reducedMotion: boolean;
+  /** Interface language; 'auto' (or missing, in older saves) follows the device. */
+  language?: LanguagePref;
 }
+
+export type LanguagePref = 'auto' | 'es' | 'ca' | 'en';
 
 export interface LevelResult {
   stars: 1 | 2 | 3;
@@ -74,7 +78,7 @@ const initial = {
   progress: {} as Record<number, LevelProgress>,
   concepts: [] as string[],
   seenConcepts: [] as string[],
-  settings: { sound: true, haptics: true, reducedMotion: false } as Settings,
+  settings: { sound: true, haptics: true, reducedMotion: false, language: 'auto' } as Settings,
   metrics: {} as Record<number, LevelMetrics>,
   mastery: { sessions: 0, correct: 0, total: 0 },
 };

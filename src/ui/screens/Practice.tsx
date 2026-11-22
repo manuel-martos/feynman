@@ -5,6 +5,7 @@ import type { Step } from '../../game/types';
 import { sfx } from '../audio';
 import { navigate } from '../router';
 import { StepPlayer } from '../StepPlayer';
+import { t } from '../../i18n';
 
 export function Practice() {
   const { progress, recordMastery, settings } = useGame();
@@ -19,9 +20,9 @@ export function Practice() {
   if (!mathUnlocked(progress)) {
     return (
       <div className="screen center">
-        <p>El modo Dominio se desbloquea al completar el capítulo 1.</p>
+        <p>{t.practice.locked}</p>
         <button className="btn primary" onClick={() => navigate({ name: 'map' })}>
-          Ir a la campaña
+          {t.practice.toCampaign}
         </button>
       </div>
     );
@@ -61,17 +62,17 @@ export function Practice() {
           <div className="mastery-ring" style={{ ['--p' as string]: pct }}>
             <strong>{pct}%</strong>
           </div>
-          <h1>{pct === 100 ? '¡Dominio total!' : pct >= 66 ? '¡Buen dominio!' : 'Sigue practicando'}</h1>
+          <h1>{pct === 100 ? t.practice.total : pct >= 66 ? t.practice.good : t.practice.keepGoing}</h1>
           <p className="done-sub">
-            {firstTry} de {steps.length} a la primera
+            {t.practice.firstTry(firstTry, steps.length)}
           </p>
         </div>
         <div className="sticky-actions two">
           <button className="btn ghost" onClick={() => navigate({ name: 'home' })}>
-            Inicio
+            {t.practice.home}
           </button>
           <button className="btn primary lg" onClick={again}>
-            Otra ronda
+            {t.practice.again}
           </button>
         </div>
       </div>
@@ -81,7 +82,7 @@ export function Practice() {
   return (
     <div className="screen level-play" style={{ ['--chapter' as string]: 'var(--accent)' }}>
       <header className="topbar">
-        <button className="icon-btn" onClick={() => navigate({ name: 'home' })} aria-label="Salir">
+        <button className="icon-btn" onClick={() => navigate({ name: 'home' })} aria-label={t.practice.exit}>
           ✕
         </button>
         <div className="step-progress">
@@ -89,7 +90,7 @@ export function Practice() {
             <span key={s.id} className={i < idx || (i === idx && solved) ? 'done' : i === idx ? 'current' : ''} />
           ))}
         </div>
-        <span className="badge mech-mastery">∞ Dominio</span>
+        <span className="badge mech-mastery">{t.practice.badge}</span>
       </header>
       <div className="prompt">
         <h2 key={step.id}>{step.prompt}</h2>
@@ -114,12 +115,12 @@ export function Practice() {
                 ✓
               </span>
               <div>
-                <strong>{missed ? 'Resuelto' : '¡A la primera!'}</strong>
+                <strong>{missed ? t.practice.solved : t.practice.solvedFirstTry}</strong>
                 {step.solved && <p>{step.solved}</p>}
               </div>
             </div>
             <button className="btn success block lg" onClick={next} autoFocus>
-              Continuar
+              {t.practice.next}
             </button>
           </div>
         </div>

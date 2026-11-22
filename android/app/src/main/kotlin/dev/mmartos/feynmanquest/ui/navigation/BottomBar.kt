@@ -47,6 +47,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -121,7 +122,7 @@ object BottomBar {
                     Box(Modifier.align(Alignment.TopEnd).offset(4.dp, (-3).dp).size(9.dp).clip(CircleShape).background(Cosmic.Positron))
                   }
                 }
-                Text(t.label, color = color, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 2.dp))
+                Text(stringResource(t.label), color = color, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 2.dp))
               }
             }
           }

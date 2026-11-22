@@ -37,6 +37,8 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -47,6 +49,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.content.Content
 import dev.mmartos.feynmanquest.core.game.GameState
 import dev.mmartos.feynmanquest.core.game.rankFor
@@ -123,7 +126,7 @@ fun HomeScreen(content: Content, state: GameState, nav: Navigator) {
           style = MaterialTheme.typography.headlineMedium.copy(fontSize = 28.sp), color = Cosmic.Text,
           modifier = Modifier.semantics { heading() },
         )
-        Text("Aprende el lenguaje del universo, una interacción cada vez.", color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.home_tagline), color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
       }
     }
 
@@ -144,38 +147,38 @@ fun HomeScreen(content: Content, state: GameState, nav: Navigator) {
         .padding(20.dp),
       verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-      DiagramCanvas(content.art.home, Modifier.fillMaxWidth(), showLabels = false, description = "Diagrama de Feynman decorativo")
+      DiagramCanvas(content.art.home, Modifier.fillMaxWidth(), showLabels = false, description = stringResource(R.string.home_art))
       if (next != null) {
-        Eyebrow(if (done == 0) "Tu aventura empieza aquí" else "Capítulo ${chapter.id} · ${chapter.title}")
-        Text("Nivel ${next.id}: ${next.title}", style = MaterialTheme.typography.headlineMedium, color = Cosmic.Text)
+        Eyebrow(if (done == 0) stringResource(R.string.home_first_time) else stringResource(R.string.home_chapter, chapter.id, chapter.title))
+        Text(stringResource(R.string.home_level, next.id, next.title), style = MaterialTheme.typography.headlineMedium, color = Cosmic.Text)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
           MechanicBadge(next.mechanic)
-          Text("${next.steps.size} ${if (next.steps.size == 1) "reto" else "retos"} · 2–5 min", color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
+          Text(pluralStringResource(R.plurals.home_challenges, next.steps.size, next.steps.size), color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
         }
-        AppButton(if (done == 0) "Empezar" else "Continuar", { nav.level(next.id) }, Modifier.fillMaxWidth().padding(top = 6.dp), ButtonStyle.Primary, large = true)
+        AppButton(stringResource(if (done == 0) R.string.home_start else R.string.home_resume), { nav.level(next.id) }, Modifier.fillMaxWidth().padding(top = 6.dp), ButtonStyle.Primary, large = true)
       } else {
-        Eyebrow("Campaña completada")
-        Text("Hablas el lenguaje de Feynman", style = MaterialTheme.typography.headlineMedium, color = Cosmic.Text)
-        AppButton("Entrenar en modo Dominio", nav::practice, Modifier.fillMaxWidth(), ButtonStyle.Primary, large = true)
+        Eyebrow(stringResource(R.string.home_campaign_done))
+        Text(stringResource(R.string.home_fluent), style = MaterialTheme.typography.headlineMedium, color = Cosmic.Text)
+        AppButton(stringResource(R.string.home_train_mastery), nav::practice, Modifier.fillMaxWidth(), ButtonStyle.Primary, large = true)
       }
     }
 
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-      Stat("${state.totalStars}", "de ${content.levels.size * 3} ★")
-      Stat("$done", "de ${content.levels.size} niveles")
-      Stat("${state.concepts.size}", "de ${content.concepts.size} conceptos")
+      Stat("${state.totalStars}", stringResource(R.string.home_of_stars, content.levels.size * 3))
+      Stat("$done", stringResource(R.string.home_of_levels, content.levels.size))
+      Stat("${state.concepts.size}", stringResource(R.string.home_of_concepts, content.concepts.size))
     }
 
     GlassCard(Modifier.fillMaxWidth()) {
       Row(verticalAlignment = Alignment.Bottom) {
         Column(Modifier.weight(1f)) {
-          Eyebrow("Rango")
+          Eyebrow(stringResource(R.string.home_rank))
           Text(rank.rank.title, fontFamily = SpaceGrotesk, fontSize = 19.sp, color = Cosmic.Text, style = MaterialTheme.typography.titleLarge)
         }
         Text("${state.xp} XP", color = Cosmic.Photon, style = MaterialTheme.typography.titleMedium)
       }
       ProgressBar(rank.progress, Modifier.fillMaxWidth())
-      rank.next?.let { Text("${it.minXp - state.xp} XP para «${it.title}»", color = Cosmic.Text3, style = MaterialTheme.typography.bodySmall) }
+      rank.next?.let { Text(stringResource(R.string.home_to_next_rank, it.minXp - state.xp, it.title), color = Cosmic.Text3, style = MaterialTheme.typography.bodySmall) }
     }
 
     val unlocked = state.mathUnlocked
@@ -195,8 +198,8 @@ fun HomeScreen(content: Content, state: GameState, nav: Navigator) {
         Text("∞", color = Cosmic.Virtual, fontSize = 28.sp, fontFamily = SpaceGrotesk)
       }
       Column(Modifier.weight(1f)) {
-        Text("Modo Dominio", style = MaterialTheme.typography.titleMedium, color = if (unlocked) Cosmic.Text else Cosmic.Text2)
-        Text(if (unlocked) "Repasa con diagramas nuevos generados al momento." else "Se desbloquea al completar el capítulo 1.", color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.home_mastery), style = MaterialTheme.typography.titleMedium, color = if (unlocked) Cosmic.Text else Cosmic.Text2)
+        Text(stringResource(if (unlocked) R.string.home_mastery_open else R.string.home_mastery_locked), color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
       }
       Text(if (unlocked) "→" else "🔒", color = Cosmic.Text, fontSize = 18.sp)
     }

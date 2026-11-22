@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -56,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.mmartos.feynmanquest.R
 import dev.mmartos.feynmanquest.core.content.Chapter
 import dev.mmartos.feynmanquest.core.content.Content
 import dev.mmartos.feynmanquest.core.content.Level
@@ -103,8 +105,8 @@ fun MapScreen(content: Content, state: GameState, focusChapter: Int?, onLevel: (
     ) {
       item("title") {
         Column(Modifier.padding(bottom = 16.dp)) {
-          Text("Campaña", style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
-          Text("${content.levels.size} niveles · ${content.chapters.size} capítulos", color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
+          Text(stringResource(R.string.map_title), style = MaterialTheme.typography.displaySmall, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
+          Text(stringResource(R.string.map_summary, content.levels.size, content.chapters.size), color = Cosmic.Text2, style = MaterialTheme.typography.bodyMedium)
         }
       }
       items.forEach { item ->
@@ -145,7 +147,7 @@ private fun ChapterHead(content: Content, state: GameState, ch: Chapter) {
       ) { Text("${ch.id}", fontFamily = SpaceGrotesk, fontWeight = FontWeight.Bold, fontSize = 21.sp, color = Cosmic.Bg1) }
       Column {
         Text(ch.title, style = MaterialTheme.typography.titleLarge, color = Cosmic.Text, modifier = Modifier.semantics { heading() })
-        Text(if (unlocked) ch.goals else "Completa el capítulo anterior para desbloquearlo.", color = Cosmic.Text2, style = MaterialTheme.typography.bodySmall)
+        Text(if (unlocked) ch.goals else stringResource(R.string.map_chapter_locked), color = Cosmic.Text2, style = MaterialTheme.typography.bodySmall)
       }
     }
     Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -174,7 +176,8 @@ private fun LevelNode(item: MapItem.Node, state: GameState, isCurrent: Boolean, 
     p != null -> Triple(Color(0xFFFFF6D6), Color(0xFFC98A00), Color(0xFF8A5D00))
     else -> Triple(lerp(color, Color.White, 0.25f), lerp(color, Color.Black, 0.3f), lerp(color, Color.Black, 0.5f))
   }
-  val label = "Nivel ${l.id}: ${l.title}" + when { p != null -> ", ${p.stars} estrellas"; !open -> ", bloqueado"; else -> "" }
+  val name = stringResource(R.string.map_level, l.id, l.title)
+  val label = when { p != null -> stringResource(R.string.map_level_stars, name, p.stars); !open -> stringResource(R.string.map_level_locked, name); else -> name }
 
   Column(
     Modifier.fillMaxWidth().padding(top = 18.dp, bottom = if (isLast) 12.dp else 0.dp).offset(x = OFFSETS[(l.id - 1) % OFFSETS.size].dp),
@@ -209,7 +212,7 @@ private fun LevelNode(item: MapItem.Node, state: GameState, isCurrent: Boolean, 
     Column(Modifier.offset(y = (-16).dp).widthIn(max = 170.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Text(l.title, color = Cosmic.Text2, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center)
       if (p != null) Stars(p.stars, size = 12.dp)
-      if (isCurrent) Text("SIGUIENTE", color = color, fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, letterSpacing = 1.1.sp)
+      if (isCurrent) Text(stringResource(R.string.map_next), color = color, fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, letterSpacing = 1.1.sp)
     }
   }
 }

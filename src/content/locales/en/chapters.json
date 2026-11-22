@@ -1,0 +1,23 @@
+{
+ "chapters.1.title": "The quantum alphabet",
+ "chapters.1.subtitle": "Lines, arrows and particles",
+ "chapters.1.goals": "Recognise electrons, positrons and photons. Discover that a diagram is not a trajectory.",
+ "chapters.2.title": "The rules of interaction",
+ "chapters.2.subtitle": "The vertex and charge",
+ "chapters.2.goals": "Discover the QED vertex and charge conservation. Tell what is allowed from what can actually happen.",
+ "chapters.3.title": "Interacting particles",
+ "chapters.3.subtitle": "Exchanges and virtual lines",
+ "chapters.3.goals": "Combine two vertices, build exchanges and tell internal lines from external ones.",
+ "chapters.4.title": "Many possibilities",
+ "chapters.4.subtitle": "One process, several stories",
+ "chapters.4.goals": "Recognise equivalent diagrams and the different contributions to the same process.",
+ "chapters.5.title": "The final challenge",
+ "chapters.5.subtitle": "No step-by-step instructions",
+ "chapters.5.goals": "Interpret, build and justify solutions on your own.",
+ "chapters.6.title": "More vertices, more stories",
+ "chapters.6.subtitle": "Higher order",
+ "chapters.6.goals": "Build three-vertex processes, count all their contributions and discover how identical bosons combine.",
+ "chapters.7.title": "Quantum loops",
+ "chapters.7.subtitle": "Beyond the tree",
+ "chapters.7.goals": "Recognise and build loops: vacuum polarization, Schwinger's number, light scattering light and Furry's theorem."
+}
